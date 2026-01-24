@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct bkContentView: View {
     @AppStorage("taskName") var taskName: String = ""
     @AppStorage("interval") var interval: String = ""
-    @State private var lastDoneDate = Date()
+    @State private var date = Date()
     @AppStorage("planedDoDate") var planedDoDate: String = ""
     @State var count: Int = 0
     var body: some View {
