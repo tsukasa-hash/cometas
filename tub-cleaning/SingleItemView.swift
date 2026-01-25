@@ -89,12 +89,35 @@ struct SingleItemView: View {
                 Button("やった") {
                     handleDone()
                 }
+                .listRowBackground(Color.clear)
+                .foregroundColor(.white)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(.black)
+                .cornerRadius(30)
+                .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
+
 
                 Button("今回はやらない") {
                     handleSkip()
                 }
+                .listRowBackground(Color.clear)
+                .foregroundColor(.gray)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(.white)
+                .cornerRadius(30)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 30)
+                        .stroke(Color.gray, lineWidth: 1)
+                )
+//                .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
+
             }
+            .listRowSeparator(.hidden)
+            
         }
+        
         .onChange(of: interval.wrappedValue) {
             recalcFromLastDone()
         }
@@ -113,6 +136,7 @@ struct SingleItemView: View {
         ) { _ in
             historyStore.reload()
         }
+        
 
     }
 
@@ -122,7 +146,7 @@ struct SingleItemView: View {
         let today = Date()
         lastDoneDate.wrappedValue = today
         nextDueDate.wrappedValue = calculateNext(from: today)
-        historyStore.add(type: .done, date: today, itemName: item)
+        historyStore.add(type: .done, date: today, itemName: item, nextDueDate: nextDueDate.wrappedValue)
     }
 
     private func handleSkip() {
@@ -130,6 +154,6 @@ struct SingleItemView: View {
         nextDueDate.wrappedValue = calculateNext(from: base)
         
         let skippedDate = base
-        historyStore.add(type: .skipped, date: skippedDate, itemName: item)
+        historyStore.add(type: .skipped, date: skippedDate, itemName: item, nextDueDate: nextDueDate.wrappedValue)
     }
 }

@@ -58,7 +58,6 @@ struct WidgetView: View {
                  .tint(status.accent)
            }
         }
-        .padding()
         .containerBackground(status.background, for: .widget)
     }
 //    var mediumView: some View {

@@ -41,6 +41,8 @@ struct HistoryView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.white)
                 }
             }
             .onDelete { offsets in
@@ -49,22 +51,22 @@ struct HistoryView: View {
             }
         }
         
-        .confirmationDialog(
-            "この履歴を削除しますか？",
-            isPresented: $showDeleteConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("削除", role: .destructive) {
-                if let offsets = pendingDeleteOffsets {
-                    historyStore.delete(at: offsets)
-                    pendingDeleteOffsets = nil
-                }
-            }
-//            iOSの仕様か、キャンセルボタンは表示されない
-            Button("キャンセル", role: .cancel) {
-                pendingDeleteOffsets = nil
-            }
-        }
+//        .confirmationDialog(
+//            "この履歴を削除しますか？",
+//            isPresented: $showDeleteConfirm,
+//            titleVisibility: .visible
+//        ) {
+//            Button("削除", role: .destructive) {
+//                if let offsets = pendingDeleteOffsets {
+//                    historyStore.delete(at: offsets)
+//                    pendingDeleteOffsets = nil
+//                }
+//            }
+////            iOSの仕様か、キャンセルボタンは表示されない
+//            Button("キャンセル", role: .cancel) {
+//                pendingDeleteOffsets = nil
+//            }
+//        }
     }
     
     private func delete(at offsets: IndexSet) {
