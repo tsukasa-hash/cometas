@@ -35,11 +35,13 @@ struct HistoryEntry: Identifiable, Codable {
     let date: Date
     let type: HistoryType
     let itemName: String
+    let nextDueDate: Date
 
-    init(date: Date, type: HistoryType, itemName: String) {
+    init(date: Date, type: HistoryType, itemName: String, nextDueDate: Date) {
         self.id = UUID()
         self.date = date
         self.type = type
         self.itemName = itemName
+        self.nextDueDate = nextDueDate
     }
 }

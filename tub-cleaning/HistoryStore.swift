@@ -26,11 +26,12 @@ final class HistoryStore: ObservableObject {
     }
     
     // MARK: - 追加
-    func add(type: HistoryType, date: Date, itemName: String) {
+    func add(type: HistoryType, date: Date, itemName: String, nextDueDate: Date) {
         let entry = HistoryEntry(
                     date: date,
                     type: type,
-                    itemName: itemName
+                    itemName: itemName,
+                    nextDueDate: nextDueDate
                 )
                 HistoryRepository.append(entry)
                 reload()

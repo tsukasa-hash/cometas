@@ -35,7 +35,8 @@ enum DoneAction {
         let entry = HistoryEntry(
             date: now,
             type: .done,
-            itemName: item
+            itemName: item,
+            nextDueDate: next
         )
 
         HistoryRepository.append(entry)
