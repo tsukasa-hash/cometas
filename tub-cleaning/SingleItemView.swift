@@ -62,6 +62,13 @@ struct SingleItemView: View {
 
     private func recalcFromLastDone() {
         nextDueDate.wrappedValue = calculateNext(from: lastDoneDate.wrappedValue)
+        refreshWidget()
+    }
+    
+    private func refreshWidget() {
+        WidgetCenter.shared.reloadTimelines(
+            ofKind: "tub_cleaningWidget"
+        )
     }
 
     // MARK: - View
@@ -73,7 +80,7 @@ struct SingleItemView: View {
             }
             Section("間隔") {
                 Picker("", selection: interval) {
-                    ForEach(Interval.allCases) {
+                    ForEach(Interval.displayOrder) {
                         Text($0.label).tag($0)
                     }
                 }
@@ -125,9 +132,7 @@ struct SingleItemView: View {
             recalcFromLastDone()
         }
         .onChange(of: item) {
-            WidgetCenter.shared.reloadTimelines(
-                ofKind: "tub_cleaningWidget"
-            )
+            refreshWidget()
         }
         .onReceive(
             NotificationCenter.default.publisher(
@@ -147,6 +152,7 @@ struct SingleItemView: View {
         lastDoneDate.wrappedValue = today
         nextDueDate.wrappedValue = calculateNext(from: today)
         historyStore.add(type: .done, date: today, itemName: item, nextDueDate: nextDueDate.wrappedValue)
+        refreshWidget()
     }
 
     private func handleSkip() {
@@ -155,5 +161,6 @@ struct SingleItemView: View {
         
         let skippedDate = base
         historyStore.add(type: .skipped, date: skippedDate, itemName: item, nextDueDate: nextDueDate.wrappedValue)
+        refreshWidget()
     }
 }

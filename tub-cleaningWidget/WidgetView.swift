@@ -30,10 +30,13 @@ struct WidgetView: View {
         
         let status = dueStatus(nextDueDate: entry.nextDueDate)
         
-       return VStack(spacing: 6) {
+        return GeometryReader {
+            geo in
+        VStack(spacing: 2) {
             Text(entry.itemName)
                 .font(.title2)
                 .fontWeight(.bold)
+                .frame(height: geo.size.height * 0.6)
            HStack {
                VStack {
                    // 残り日数
@@ -57,8 +60,10 @@ struct WidgetView: View {
                  .buttonStyle(.plain)
                  .tint(status.accent)
            }
+           .frame(height: geo.size.height * 0.4)
         }
         .containerBackground(status.background, for: .widget)
+    }
     }
 //    var mediumView: some View {
 //        HStack {
