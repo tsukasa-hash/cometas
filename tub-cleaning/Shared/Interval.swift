@@ -14,6 +14,14 @@ enum Interval: String, CaseIterable, Identifiable, Codable {
     case twoMonths
     case sixMonths
 
+    static let displayOrder: [Interval] = [
+        .oneWeek,
+        .tenDays,
+        .oneMonth,
+        .twoMonths,
+        .sixMonths
+    ]
+    
     var id: Self { self }
 
     var label: String {

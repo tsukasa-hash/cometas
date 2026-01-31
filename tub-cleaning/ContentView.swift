@@ -23,11 +23,11 @@ struct ContentView: View {
                     Label("history", systemImage: "rectangle.and.pencil.and.ellipsis")
                 }
                 .tag(2)
-            SettingView()
-                .tabItem {
-                    Label("setting", systemImage: "gearshape")
-                }
-                .tag(3)
+//            SettingView()
+//                .tabItem {
+//                    Label("setting", systemImage: "gearshape")
+//                }
+//                .tag(3)
         }
         .environmentObject(historyStore)
     }
