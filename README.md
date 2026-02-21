@@ -131,10 +131,10 @@
 
   <h2>11. お問い合わせ</h2>
   <p>
-    本アプリのプライバシーに関するご質問は、以下までご連絡ください。
+    本アプリのプライバシーに関するご質問は、以下よりお願いします。
   </p>
   <p>
-    連絡先：<a href="mailto:id6tztx7912@gmail.com">id6tztx7912@gmail.com</a>
+    連絡先：<a href="https://forms.gle/tEYEvBxwpDbmE3bu7">お問い合わせフォーム</a>
   </p>
 
   <hr />
