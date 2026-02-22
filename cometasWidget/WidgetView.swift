@@ -32,35 +32,45 @@ struct WidgetView: View {
         
         return GeometryReader {
             geo in
-        VStack(spacing: 2) {
+        VStack {
             Text(entry.itemName)
                 .font(.title2)
+                .foregroundColor(.black)
                 .fontWeight(.bold)
-                .frame(height: geo.size.height * 0.7)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(height: geo.size.height * 0.6,alignment: .topLeading)
            HStack {
                VStack {
                    // 残り日数
                    Text(status.label)
                        .font(.caption)
-                       .foregroundStyle(.secondary)
-                   
+                       .foregroundColor(.gray)
+                       .frame(maxWidth: .infinity, alignment: .leading)
                    HStack {
                        Text("\(status.days)")
+                           .frame(alignment: .leading)
+                           .foregroundColor(.black)
                        Text("日")
                            .font(.caption)
-                           .foregroundStyle(.secondary)
+                           .foregroundColor(.gray)
+                           .frame(maxWidth: .infinity, alignment: .leading)
                    }
                }
                  Button(intent: DoneIntent()) {
 //                     Image(systemName: "checkmark.bubble.fill")
 //                     Image(systemName: "checkmark.square.fill")
-                     Image(systemName: "checkmark.rectangle.portrait.fill")
+//                     Image(systemName: "checkmark.rectangle.portrait.fill")
+                     Image(systemName: "checkmark")
                          .font(.title2)
                  }
-                 .buttonStyle(.plain)
-                 .tint(status.accent)
+                 .buttonStyle(.bordered)
+//                 .tint(status.accent)
+                 .tint(.black)
+                 .foregroundColor(.white)
+                 .background(.black)
+                 .cornerRadius(10)
            }
-           .frame(height: geo.size.height * 0.3)
+           .frame(height: geo.size.height * 0.4)
         }
         .containerBackground(status.background, for: .widget)
     }

@@ -39,22 +39,22 @@ enum DueStatus {
     var background: Color {
         switch self {
         case .overdue:
-            return .red.opacity(0.25)
+            return Color(red: 1.0, green: 0.90, blue: 0.90)
         case .today, .soon:
-            return .orange.opacity(0.25)
+            return Color(red: 1.0, green: 0.95, blue: 0.86)
         case .normal:
-            return .gray.opacity(0.15)
+            return Color(red: 0.97, green: 0.97, blue: 0.97)
         }
     }
 
     var accent: Color {
         switch self {
         case .overdue:
-            return .red
+            return Color(red: 0.85, green: 0.20, blue: 0.20)
         case .today, .soon:
-            return .orange
+            return Color(red: 0.95, green: 0.45, blue: 0.10)
         case .normal:
-            return .secondary
+            return Color(white: 0.35)
         }
     }
 }
