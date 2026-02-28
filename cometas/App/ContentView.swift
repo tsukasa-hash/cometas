@@ -79,7 +79,7 @@ struct ContentView: View {
                 .highPriorityGesture(swipeGesture())
         case .history:
             HistoryView()
-                .highPriorityGesture(swipeGesture())
+                .simultaneousGesture(historyRightSwipeGesture())
         }
     }
 
@@ -99,6 +99,26 @@ struct ContentView: View {
             if horizontal < 0, currentIndex + 1 < AppTab.allCases.count {
                 selection = AppTab.allCases[currentIndex + 1]
             } else if horizontal > 0, currentIndex - 1 >= 0 {
+                selection = AppTab.allCases[currentIndex - 1]
+            }
+        }
+    }
+
+    private func historyRightSwipeGesture() -> some Gesture {
+        DragGesture().onEnded { value in
+            let horizontal = value.translation.width
+            let vertical = value.translation.height
+
+            guard selection == .history else { return }
+            guard abs(horizontal) > abs(vertical), horizontal > minSwipeDistance else {
+                return
+            }
+
+            guard let currentIndex = AppTab.allCases.firstIndex(of: selection) else {
+                return
+            }
+
+            if currentIndex - 1 >= 0 {
                 selection = AppTab.allCases[currentIndex - 1]
             }
         }
