@@ -50,6 +50,7 @@ struct SingleItemView: View {
                     ),
                     displayedComponents: .date
                 )
+                .environment(\.locale, DatePresentation.locale)
                 DatePicker(
                     "次回",
                     selection: Binding(
@@ -58,6 +59,7 @@ struct SingleItemView: View {
                     ),
                     displayedComponents: .date
                 )
+                .environment(\.locale, DatePresentation.locale)
                     .disabled(true)
             }
 

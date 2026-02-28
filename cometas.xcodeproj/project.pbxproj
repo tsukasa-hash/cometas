@@ -52,23 +52,23 @@
 			);
 			target = F959031B2F24840C00AFDD78 /* cometasWidgetExtension */;
 		};
-			F95903402F248EFC00AFDD78 /* Exceptions for "cometas" folder in "cometasWidgetExtension" target */ = {
-				isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-				membershipExceptions = (
-					Domain/Model/HistoryEntry.swift,
-					Domain/Model/Interval.swift,
-					Domain/Service/NextDueDateCalculator.swift,
-					Domain/UseCase/RecordDoneUseCase.swift,
-					Features/History/HistoryStore.swift,
-					Infrastructure/Shared/SharedStore.swift,
-					Infrastructure/Shared/WidgetTimelineReloader.swift,
-					Infrastructure/Storage/AppSettings.swift,
-					Infrastructure/Storage/HistoryRepository.swift,
-					Intent/DoneIntent.swift,
-					Intent/WidgetDoneActionAdapter.swift,
-					Shared/SharedLogic.swift,
-				);
-				target = F959031B2F24840C00AFDD78 /* cometasWidgetExtension */;
+		F95903402F248EFC00AFDD78 /* Exceptions for "cometas" folder in "cometasWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Domain/Model/HistoryEntry.swift,
+				Domain/Model/Interval.swift,
+				Domain/Service/NextDueDateCalculator.swift,
+				Domain/UseCase/RecordDoneUseCase.swift,
+				Features/History/HistoryStore.swift,
+				Infrastructure/Shared/SharedStore.swift,
+				Infrastructure/Shared/WidgetTimelineReloader.swift,
+				Infrastructure/Storage/AppSettings.swift,
+				Infrastructure/Storage/HistoryRepository.swift,
+				Intent/DoneIntent.swift,
+				Intent/WidgetDoneActionAdapter.swift,
+				Shared/SharedLogic.swift,
+			);
+			target = F959031B2F24840C00AFDD78 /* cometasWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 

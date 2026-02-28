@@ -12,12 +12,6 @@ import SwiftUI
 struct HistoryView: View {
     
     @EnvironmentObject var historyStore: HistoryStore
-
-    private let formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy/MM/dd"
-        return f
-    }()
     
     var body: some View {
         List {
@@ -35,7 +29,7 @@ struct HistoryView: View {
                                 .font(.headline)
 
                         }
-                        Text(formatter.string(from: entry.date))
+                        Text(entry.date, format: DatePresentation.ymdFormat)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
