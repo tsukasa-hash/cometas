@@ -28,20 +28,26 @@ final class HistoryStore: ObservableObject {
     // MARK: - 追加
     func add(type: HistoryType, date: Date, itemName: String, nextDueDate: Date) {
         let entry = HistoryEntry(
-                    date: date,
-                    type: type,
-                    itemName: itemName,
-                    nextDueDate: nextDueDate
-                )
-                HistoryRepository.append(entry)
-                reload()
-        
+            date: date,
+            type: type,
+            itemName: itemName,
+            nextDueDate: nextDueDate
+        )
+        histories.insert(entry, at: 0)
+        HistoryRepository.append(entry)
+    }
+
+    // MARK: - 追加（永続化済み）
+    func insertPersisted(_ entry: HistoryEntry) {
+        histories.insert(entry, at: 0)
     }
 
     // MARK: - 削除
-    func delete(at offsets: IndexSet) {
-        
-        HistoryRepository.delete(at: offsets)
-        reload()
+    func delete(ids: [UUID]) {
+        guard !ids.isEmpty else { return }
+
+        let idSet = Set(ids)
+        histories.removeAll { idSet.contains($0.id) }
+        HistoryRepository.delete(ids: ids)
     }
 }

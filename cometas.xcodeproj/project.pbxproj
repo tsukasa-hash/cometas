@@ -59,9 +59,14 @@
 				HistoryRepository.swift,
 				HistoryStore.swift,
 				Intent/DoneIntent.swift,
+				Intent/WidgetDoneActionAdapter.swift,
+				Shared/AppSettings.swift,
 				Shared/Interval.swift,
+				Shared/NextDueDateCalculator.swift,
 				Shared/SharedLogic.swift,
 				Shared/SharedStore.swift,
+				Shared/WidgetTimelineReloader.swift,
+				UseCase/RecordDoneUseCase.swift,
 			);
 			target = F959031B2F24840C00AFDD78 /* cometasWidgetExtension */;
 		};

@@ -12,9 +12,7 @@ import SwiftUI
 struct HistoryView: View {
     
     @EnvironmentObject var historyStore: HistoryStore
-    @State private var showDeleteConfirm = false
-    @State private var pendingDeleteOffsets: IndexSet?
-    
+
     private let formatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy/MM/dd"
@@ -46,30 +44,9 @@ struct HistoryView: View {
                 }
             }
             .onDelete { offsets in
-                pendingDeleteOffsets = offsets
-                showDeleteConfirm = true
+                let ids = offsets.map { historyStore.histories[$0].id }
+                historyStore.delete(ids: ids)
             }
         }
-        
-//        .confirmationDialog(
-//            "この履歴を削除しますか？",
-//            isPresented: $showDeleteConfirm,
-//            titleVisibility: .visible
-//        ) {
-//            Button("削除", role: .destructive) {
-//                if let offsets = pendingDeleteOffsets {
-//                    historyStore.delete(at: offsets)
-//                    pendingDeleteOffsets = nil
-//                }
-//            }
-////            iOSの仕様か、キャンセルボタンは表示されない
-//            Button("キャンセル", role: .cancel) {
-//                pendingDeleteOffsets = nil
-//            }
-//        }
-    }
-    
-    private func delete(at offsets: IndexSet) {
-        historyStore.delete(at: offsets)
     }
 }

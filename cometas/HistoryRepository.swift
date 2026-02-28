@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftUI
 
 enum HistoryRepository {
 //    アプリ、ウィジェットいずれも永続化はこのクラスを使う
@@ -35,11 +34,13 @@ enum HistoryRepository {
         histories.insert(entry, at: 0)
         save(histories)
     }
-    
-    
-    static func delete(at offsets: IndexSet) {
+
+    static func delete(ids: [UUID]) {
+        guard !ids.isEmpty else { return }
+
         var histories = load()
-        histories.remove(atOffsets: offsets)
+        let idSet = Set(ids)
+        histories.removeAll { idSet.contains($0.id) }
         save(histories)
     }
 }

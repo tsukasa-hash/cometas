@@ -17,12 +17,9 @@ struct Provider: TimelineProvider {
         in context: Context,
         completion: @escaping (SimpleEntry) -> Void
     ) {
-        let defaults = SharedStore.defaults
-
-        let itemName = defaults.string(forKey: "item") ?? "未設定"
-        
-        let nextDueTs = defaults.double(forKey: "nextDueTimestamp")
-        let nextDueDate = Date(timeIntervalSince1970: nextDueTs == 0 ? Date().timeIntervalSince1970 : nextDueTs)
+        let storedItemName = AppSettings.itemName()
+        let itemName = storedItemName.isEmpty ? "未設定" : storedItemName
+        let nextDueDate = AppSettings.nextDueDate()
         completion(SimpleEntry(date: Date(), itemName: itemName, nextDueDate: nextDueDate))
     }
 
@@ -30,11 +27,9 @@ struct Provider: TimelineProvider {
         in context: Context,
         completion: @escaping (Timeline<SimpleEntry>) -> Void
     ) {
-        let defaults = SharedStore.defaults
-
-        let itemName = defaults.string(forKey: "item") ?? "未設定"
-        let nextDueTs = defaults.double(forKey: "nextDueTimestamp")
-        let nextDueDate = Date(timeIntervalSince1970: nextDueTs == 0 ? Date().timeIntervalSince1970 : nextDueTs)
+        let storedItemName = AppSettings.itemName()
+        let itemName = storedItemName.isEmpty ? "未設定" : storedItemName
+        let nextDueDate = AppSettings.nextDueDate()
         let entry = SimpleEntry(date: Date(), itemName: itemName, nextDueDate: nextDueDate)
         let timeline = Timeline(
             entries: [entry],

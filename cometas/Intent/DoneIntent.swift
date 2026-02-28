@@ -12,9 +12,8 @@ struct DoneIntent: AppIntent {
     static var title: LocalizedStringResource = "やった"
 
     func perform() async throws -> some IntentResult {
-        DoneAction.done()
+        WidgetDoneActionAdapter.run()
 
         return .result()
     }
 }
-

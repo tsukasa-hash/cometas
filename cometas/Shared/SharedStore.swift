@@ -21,4 +21,3 @@ enum SharedStore {
     // keys
     static let historyKey = "historyEntries"
 }
-
