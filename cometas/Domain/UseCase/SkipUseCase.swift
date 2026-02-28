@@ -37,6 +37,7 @@ struct SkipUseCase {
         let entry = HistoryEntry(
             date: skippedDate,
             type: .skipped,
+            task: settings.task,
             itemName: itemName,
             nextDueDate: nextDueDate
         )

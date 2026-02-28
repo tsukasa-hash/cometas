@@ -8,6 +8,7 @@
 import Foundation
 
 protocol AppSettingsAccessing {
+    var task: ManagedTask { get }
     var itemName: String { get }
     var interval: Interval { get }
     var nextDueDate: Date { get }
@@ -16,16 +17,22 @@ protocol AppSettingsAccessing {
 }
 
 struct UserDefaultsAppSettingsStore: AppSettingsAccessing {
-    var itemName: String { AppSettings.itemName() }
-    var interval: Interval { AppSettings.interval() }
-    var nextDueDate: Date { AppSettings.nextDueDate() }
+    let task: ManagedTask
+
+    init(task: ManagedTask = .primary) {
+        self.task = task
+    }
+
+    var itemName: String { AppSettings.itemName(task: task) }
+    var interval: Interval { AppSettings.interval(task: task) }
+    var nextDueDate: Date { AppSettings.nextDueDate(task: task) }
 
     func setLastDoneDate(_ date: Date) {
-        AppSettings.setLastDoneDate(date)
+        AppSettings.setLastDoneDate(date, task: task)
     }
 
     func setNextDueDate(_ date: Date) {
-        AppSettings.setNextDueDate(date)
+        AppSettings.setNextDueDate(date, task: task)
     }
 }
 
@@ -80,6 +87,7 @@ struct RecordDoneUseCase {
         let entry = HistoryEntry(
             date: now,
             type: .done,
+            task: settings.task,
             itemName: itemName,
             nextDueDate: nextDueDate
         )

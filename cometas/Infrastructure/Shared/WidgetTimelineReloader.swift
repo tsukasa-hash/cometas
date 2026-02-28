@@ -23,3 +23,7 @@ struct WidgetCenterTimelineReloader: WidgetTimelineReloading {
         WidgetCenter.shared.reloadTimelines(ofKind: kind)
     }
 }
+
+struct NoopWidgetTimelineReloader: WidgetTimelineReloading {
+    func reload() {}
+}

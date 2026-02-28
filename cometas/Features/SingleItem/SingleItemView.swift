@@ -11,8 +11,12 @@ import SwiftUI
 import UIKit
 
 struct SingleItemView: View {
-    @StateObject private var viewModel = SingleItemViewModel()
+    @StateObject private var viewModel: SingleItemViewModel
     @EnvironmentObject var historyStore: HistoryStore
+
+    init(task: ManagedTask = .primary) {
+        _viewModel = StateObject(wrappedValue: SingleItemViewModel(task: task))
+    }
 
     // MARK: - View
 

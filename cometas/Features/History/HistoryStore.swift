@@ -26,10 +26,11 @@ final class HistoryStore: ObservableObject {
     }
     
     // MARK: - 追加
-    func add(type: HistoryType, date: Date, itemName: String, nextDueDate: Date) {
+    func add(type: HistoryType, task: ManagedTask, date: Date, itemName: String, nextDueDate: Date) {
         let entry = HistoryEntry(
             date: date,
             type: type,
+            task: task,
             itemName: itemName,
             nextDueDate: nextDueDate
         )
