@@ -51,4 +51,20 @@ final class HistoryStore: ObservableObject {
         histories.removeAll { idSet.contains($0.id) }
         HistoryRepository.delete(ids: ids)
     }
+
+    // MARK: - 日付更新
+    func updateDate(id: UUID, newDate: Date) {
+        guard let index = histories.firstIndex(where: { $0.id == id }) else { return }
+        let current = histories[index]
+
+        histories[index] = HistoryEntry(
+            id: current.id,
+            date: newDate,
+            type: current.type,
+            task: current.task,
+            itemName: current.itemName,
+            nextDueDate: current.nextDueDate
+        )
+        HistoryRepository.updateDate(id: id, newDate: newDate)
+    }
 }

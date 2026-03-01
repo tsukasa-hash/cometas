@@ -166,6 +166,58 @@ final class StorageAndAdapterTests: XCTestCase {
         XCTAssertEqual(loaded.count, 2)
     }
 
+    /// 対象ファイル名: HistoryRepository.swift
+    /// 対象メソッド名: HistoryRepository.updateDate(id:newDate:)
+    ///
+    /// 目的: 指定IDの履歴のみ日付更新し、他項目とIDを保持することを保証する。
+    /// Given（前提）: 2件の履歴を保存し、片方のみ更新対象にする。
+    /// When（操作）: 更新対象IDで updateDate を実行する。
+    /// Then（期待）: 対象のみ日付が変わり、非対象は変わらない。
+    /// 回帰リスク: 編集で別履歴が壊れる、またはIDが変化して整合性が崩れる。
+    func testHistoryRepositoryUpdateDateChangesOnlyTargetEntry() {
+        // Given（前提）
+        let backup = backupSharedStoreValues()
+        defer { restoreSharedStoreValues(backup) }
+
+        let targetOriginalDate = Date(timeIntervalSince1970: 1_701_000_000)
+        let updatedDate = Date(timeIntervalSince1970: 1_702_000_000)
+
+        let target = HistoryEntry(
+            date: targetOriginalDate,
+            type: .done,
+            task: .primary,
+            itemName: "Target",
+            nextDueDate: Date(timeIntervalSince1970: 1_701_100_000)
+        )
+        let untouched = HistoryEntry(
+            date: Date(timeIntervalSince1970: 1_703_000_000),
+            type: .skipped,
+            task: .secondary,
+            itemName: "Untouched",
+            nextDueDate: Date(timeIntervalSince1970: 1_703_100_000)
+        )
+
+        HistoryRepository.save([target, untouched])
+
+        // When（操作）
+        HistoryRepository.updateDate(id: target.id, newDate: updatedDate)
+
+        // Then（期待）
+        let loaded = HistoryRepository.load()
+        let loadedTarget = loaded.first(where: { $0.id == target.id })
+        let loadedUntouched = loaded.first(where: { $0.id == untouched.id })
+
+        XCTAssertNotNil(loadedTarget)
+        XCTAssertNotNil(loadedUntouched)
+        XCTAssertEqual(loadedTarget?.date, updatedDate)
+        XCTAssertEqual(loadedTarget?.id, target.id)
+        XCTAssertEqual(loadedTarget?.type, target.type)
+        XCTAssertEqual(loadedTarget?.task, target.task)
+        XCTAssertEqual(loadedTarget?.itemName, target.itemName)
+        XCTAssertEqual(loadedTarget?.nextDueDate, target.nextDueDate)
+        XCTAssertEqual(loadedUntouched?.date, untouched.date)
+    }
+
     /// 対象ファイル名: WidgetDoneActionAdapter.swift
     /// 対象メソッド名: WidgetDoneActionAdapter.run()
     ///

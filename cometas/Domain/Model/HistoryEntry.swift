@@ -54,8 +54,15 @@ struct HistoryEntry: Identifiable, Codable {
     let itemName: String
     let nextDueDate: Date
 
-    init(date: Date, type: HistoryType, task: ManagedTask, itemName: String, nextDueDate: Date) {
-        self.id = UUID()
+    init(
+        id: UUID = UUID(),
+        date: Date,
+        type: HistoryType,
+        task: ManagedTask,
+        itemName: String,
+        nextDueDate: Date
+    ) {
+        self.id = id
         self.date = date
         self.type = type
         self.task = task

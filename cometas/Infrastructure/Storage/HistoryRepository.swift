@@ -43,4 +43,20 @@ enum HistoryRepository {
         histories.removeAll { idSet.contains($0.id) }
         save(histories)
     }
+
+    static func updateDate(id: UUID, newDate: Date) {
+        var histories = load()
+        guard let index = histories.firstIndex(where: { $0.id == id }) else { return }
+
+        let current = histories[index]
+        histories[index] = HistoryEntry(
+            id: current.id,
+            date: newDate,
+            type: current.type,
+            task: current.task,
+            itemName: current.itemName,
+            nextDueDate: current.nextDueDate
+        )
+        save(histories)
+    }
 }
