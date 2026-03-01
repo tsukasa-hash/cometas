@@ -20,6 +20,13 @@
 			remoteGlobalIDString = F959031B2F24840C00AFDD78;
 			remoteInfo = "tub-cleaningWidgetExtension";
 		};
+		F98101142F53D77E00EA468A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95902E82F1B9F2500AFDD78 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F95902EF2F1B9F2500AFDD78;
+			remoteInfo = cometas;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,6 +49,7 @@
 		F959031E2F24840C00AFDD78 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		F95903202F24840C00AFDD78 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		F95903372F248C7D00AFDD78 /* cometasWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = cometasWidgetExtension.entitlements; sourceTree = "<group>"; };
+		F98101102F53D77E00EA468A /* cometasTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cometasTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -89,6 +97,11 @@
 			path = cometasWidget;
 			sourceTree = "<group>";
 		};
+		F98101112F53D77E00EA468A /* cometasTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = cometasTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +121,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F981010D2F53D77E00EA468A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -117,6 +137,7 @@
 				F95903372F248C7D00AFDD78 /* cometasWidgetExtension.entitlements */,
 				F95902F22F1B9F2500AFDD78 /* cometas */,
 				F95903222F24840C00AFDD78 /* cometasWidget */,
+				F98101112F53D77E00EA468A /* cometasTests */,
 				F959031D2F24840C00AFDD78 /* Frameworks */,
 				F95902F12F1B9F2500AFDD78 /* Products */,
 			);
@@ -127,6 +148,7 @@
 			children = (
 				F95902F02F1B9F2500AFDD78 /* cometas.app */,
 				F959031C2F24840C00AFDD78 /* cometasWidgetExtension.appex */,
+				F98101102F53D77E00EA468A /* cometasTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -189,6 +211,29 @@
 			productReference = F959031C2F24840C00AFDD78 /* cometasWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		F981010F2F53D77E00EA468A /* cometasTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F98101182F53D77E00EA468A /* Build configuration list for PBXNativeTarget "cometasTests" */;
+			buildPhases = (
+				F981010C2F53D77E00EA468A /* Sources */,
+				F981010D2F53D77E00EA468A /* Frameworks */,
+				F981010E2F53D77E00EA468A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F98101152F53D77E00EA468A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F98101112F53D77E00EA468A /* cometasTests */,
+			);
+			name = cometasTests;
+			packageProductDependencies = (
+			);
+			productName = cometasTests;
+			productReference = F98101102F53D77E00EA468A /* cometasTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -204,6 +249,10 @@
 					};
 					F959031B2F24840C00AFDD78 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					F981010F2F53D77E00EA468A = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = F95902EF2F1B9F2500AFDD78;
 					};
 				};
 			};
@@ -223,6 +272,7 @@
 			targets = (
 				F95902EF2F1B9F2500AFDD78 /* cometas */,
 				F959031B2F24840C00AFDD78 /* cometasWidgetExtension */,
+				F981010F2F53D77E00EA468A /* cometasTests */,
 			);
 		};
 /* End PBXProject section */
@@ -236,6 +286,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F959031A2F24840C00AFDD78 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F981010E2F53D77E00EA468A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -259,6 +316,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F981010C2F53D77E00EA468A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -266,6 +330,11 @@
 			isa = PBXTargetDependency;
 			target = F959031B2F24840C00AFDD78 /* cometasWidgetExtension */;
 			targetProxy = F959032A2F24840E00AFDD78 /* PBXContainerItemProxy */;
+		};
+		F98101152F53D77E00EA468A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F95902EF2F1B9F2500AFDD78 /* cometas */;
+			targetProxy = F98101142F53D77E00EA468A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -539,6 +608,47 @@
 			};
 			name = Release;
 		};
+		F98101162F53D77E00EA468A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tsukasa.nishioka.cometasTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/cometas.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/cometas";
+			};
+			name = Debug;
+		};
+		F98101172F53D77E00EA468A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 63233SL24F;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tsukasa.nishioka.cometasTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/cometas.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/cometas";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -565,6 +675,15 @@
 			buildConfigurations = (
 				F959032F2F24840E00AFDD78 /* Debug */,
 				F95903302F24840E00AFDD78 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F98101182F53D77E00EA468A /* Build configuration list for PBXNativeTarget "cometasTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F98101162F53D77E00EA468A /* Debug */,
+				F98101172F53D77E00EA468A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
