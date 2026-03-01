@@ -36,6 +36,26 @@ enum DueStatus {
         }
     }
 
+    var accessoryDaysDisplayText: String {
+        switch self {
+        case .overdue(let d):
+            return "-\(d)"
+        case .today(let d), .soon(let d), .normal(let d):
+            return "\(d)"
+        }
+    }
+
+    var lockScreenCaption: String {
+        switch self {
+        case .overdue:
+            return "期限切れ"
+        case .today:
+            return "今日が期限"
+        case .soon, .normal:
+            return "残り日数"
+        }
+    }
+
     var background: Color {
         switch self {
         case .overdue:

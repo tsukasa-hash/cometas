@@ -19,9 +19,12 @@ struct cometasWidget: Widget {
         ) { entry in
             WidgetView(entry: entry)   // ← ここで表示
         }
-        .configurationDisplayName("洗濯槽管理")
-        .description("洗濯槽を洗ったかを記録します")
-        .supportedFamilies([.systemSmall,.systemMedium])
+        .configurationDisplayName("cometasウィジェット")
+        .description("ホーム画面とロック画面で残り日数を表示します")
+        .supportedFamilies([
+            .systemSmall,
+            .accessoryCircular,
+            .accessoryRectangular
+        ])
     }
 }
-
