@@ -88,59 +88,58 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    ForEach(filteredHistories) { entry in
-                        HStack {
-                            Image(systemName: entry.type.systemImage)
-                                .foregroundStyle(entry.type == .done ? .green : .orange)
-                            
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Text(entry.type.label)
-                                        .font(.headline)
-                                    Text(entry.itemName)
-                                        .font(.headline)
-                                }
-                                Text(entry.date, format: DatePresentation.ymdFormat)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                ForEach(filteredHistories) { entry in
+                    HStack {
+                        Image(systemName: entry.type.systemImage)
+                            .foregroundStyle(entry.type == .done ? .green : .orange)
+                        
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text(entry.type.label)
+                                    .font(.headline)
+                                Text(entry.itemName)
+                                    .font(.headline)
                             }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.white)
+                            Text(entry.date, format: DatePresentation.ymdFormat)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                        .listRowBackground(
-                            (pressingEntryID == entry.id) ? Color(uiColor: .systemGray5) : Color.clear
-                        )
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                historyStore.delete(ids: [entry.id])
-                            } label: {
-                                Label("削除", systemImage: "trash")
-                            }
-    
-                            Button {
-                                editingEntry = entry
-                                editedDate = entry.date
-                            } label: {
-                                Label("編集", systemImage: "pencil.line")
-                            }
-                            .tint(.orange)
+                        .buttonStyle(.borderedProminent)
+                        .tint(.white)
+                    }
+                    .listRowBackground(
+                        (pressingEntryID == entry.id) ? Color(uiColor: .systemGray5) : Color.clear
+                    )
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            historyStore.delete(ids: [entry.id])
+                        } label: {
+                            Label("削除", systemImage: "trash")
                         }
-                        .onLongPressGesture(minimumDuration: 0.5, pressing: { isPressing in
-                            pressingEntryID = isPressing ? entry.id : nil
-                        }) {
+
+                        Button {
                             editingEntry = entry
                             editedDate = entry.date
+                        } label: {
+                            Label("編集", systemImage: "pencil.line")
                         }
+                        .tint(.orange)
                     }
-                    .onDelete { offsets in
-                        let ids = offsets.map { filteredHistories[$0].id }
-                        historyStore.delete(ids: ids)
+                    .onLongPressGesture(minimumDuration: 0.5, pressing: { isPressing in
+                        pressingEntryID = isPressing ? entry.id : nil
+                    }) {
+                        editingEntry = entry
+                        editedDate = entry.date
                     }
-                    
+                }
+                .onDelete { offsets in
+                    let ids = offsets.map { filteredHistories[$0].id }
+                    historyStore.delete(ids: ids)
                 }
             }
+            .listStyle(.plain)
             .navigationTitle("履歴")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     filterMenu
