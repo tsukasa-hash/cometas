@@ -9,23 +9,79 @@ import Foundation
 
 import SwiftUI
 
+private enum HistoryTypeSelection: String, CaseIterable, Identifiable {
+    case all
+    case done
+    case skipped
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .all:
+            return "すべて"
+        case .done:
+            return "やった"
+        case .skipped:
+            return "スキップ"
+        }
+    }
+
+    func includes(_ type: HistoryType) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .done:
+            return type == .done
+        case .skipped:
+            return type == .skipped
+        }
+    }
+}
+
+private enum HistoryTaskSelection: String, CaseIterable, Identifiable {
+    case all
+    case task1
+    case task2
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .all:
+            return "すべて"
+        case .task1:
+            return "task1"
+        case .task2:
+            return "task2"
+        }
+    }
+
+    func includes(_ task: ManagedTask) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .task1:
+            return task == .primary
+        case .task2:
+            return task == .secondary
+        }
+    }
+}
+
 struct HistoryView: View {
     
     @EnvironmentObject var historyStore: HistoryStore
     @Environment(\.calendar) private var calendar
-    @State private var showDone = true
-    @State private var showSkipped = true
-    @State private var showTask1 = true
-    @State private var showTask2 = true
+    @State private var selectedType: HistoryTypeSelection = .all
+    @State private var selectedTask: HistoryTaskSelection = .all
     @State private var editingEntry: HistoryEntry?
     @State private var editedDate: Date = Date()
     @State private var pressingEntryID: UUID?
 
     private var filteredHistories: [HistoryEntry] {
         historyStore.histories.filter { entry in
-            let isTypeIncluded = (entry.type == .done && showDone) || (entry.type == .skipped && showSkipped)
-            let isTaskIncluded = (entry.task == .primary && showTask1) || (entry.task == .secondary && showTask2)
-            return isTypeIncluded && isTaskIncluded
+            selectedType.includes(entry.type) && selectedTask.includes(entry.task)
         }
     }
     
@@ -85,11 +141,11 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("履歴")
-//            .toolbar {
-//                ToolbarItem(placement: .topBarTrailing) {
-//                    filterMenu
-//                }
-//            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    filterMenu
+                }
+            }
         }
         .sheet(item: $editingEntry) { entry in
             NavigationStack {
@@ -190,30 +246,22 @@ struct HistoryView: View {
     private var filterMenu: some View {
         Menu {
             Section("種類") {
-                Button {
-                    showDone.toggle()
-                } label: {
-                    filterLabel("やった", isSelected: showDone)
-                }
-
-                Button {
-                    showSkipped.toggle()
-                } label: {
-                    filterLabel("スキップ", isSelected: showSkipped)
+                ForEach(HistoryTypeSelection.allCases) { filter in
+                    Button {
+                        selectedType = filter
+                    } label: {
+                        filterLabel(filter.label, isSelected: selectedType == filter)
+                    }
                 }
             }
 
             Section("タスク") {
-                Button {
-                    showTask1.toggle()
-                } label: {
-                    filterLabel("task1", isSelected: showTask1)
-                }
-
-                Button {
-                    showTask2.toggle()
-                } label: {
-                    filterLabel("task2", isSelected: showTask2)
+                ForEach(HistoryTaskSelection.allCases) { filter in
+                    Button {
+                        selectedTask = filter
+                    } label: {
+                        filterLabel(filter.label, isSelected: selectedTask == filter)
+                    }
                 }
             }
         } label: {
