@@ -85,11 +85,11 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("履歴")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    filterMenu
-                }
-            }
+//            .toolbar {
+//                ToolbarItem(placement: .topBarTrailing) {
+//                    filterMenu
+//                }
+//            }
         }
         .sheet(item: $editingEntry) { entry in
             NavigationStack {
