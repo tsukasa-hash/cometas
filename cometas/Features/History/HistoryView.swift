@@ -59,9 +59,9 @@ private enum HistoryTaskSelection: String, CaseIterable, Identifiable {
         case .all:
             return "すべて"
         case .task1:
-            return "task1"
+            return "タスク1"
         case .task2:
-            return "task2"
+            return "タスク2"
         }
     }
 

@@ -16,9 +16,9 @@ enum ManagedTask: Int, Codable, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .primary:
-            return "task1"
+            return "タスク1"
         case .secondary:
-            return "task2"
+            return "タスク2"
         }
     }
 }

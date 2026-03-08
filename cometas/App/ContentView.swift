@@ -18,13 +18,13 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .task1:
-            return "task1"
+            return "タスク1"
         case .task2:
-            return "task2"
+            return "タスク2"
         case .history:
-            return "history"
+            return "履歴"
         case .settings:
-            return "setting"
+            return "設定"
         }
     }
 
@@ -84,18 +84,26 @@ struct ContentView: View {
     private func contentView(for tab: AppTab) -> some View {
         switch tab {
         case .task1:
-            SingleItemView(task: .primary)
-                .highPriorityGesture(swipeGesture())
+            NavigationStack {
+                SingleItemView(task: .primary)
+                    .navigationTitle("タスク1")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+            .highPriorityGesture(swipeGesture())
         case .task2:
-            SingleItemView(task: .secondary)
-                .highPriorityGesture(swipeGesture())
+            NavigationStack {
+                SingleItemView(task: .secondary)
+                    .navigationTitle("タスク2")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+            .highPriorityGesture(swipeGesture())
         case .history:
             HistoryView(onBackgroundSwipeLeft: {
                 selection = .settings
             })
                 .overlay(alignment: .top) {
                     Color.clear
-                        .frame(height: 120)
+                        .frame(width: 220, height: 80)
                         .contentShape(Rectangle())
                         .highPriorityGesture(historyTitleRightSwipeToSettingsGesture())
                 }

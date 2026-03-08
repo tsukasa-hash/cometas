@@ -17,9 +17,9 @@ enum WidgetDisplayTaskOption: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .task1:
-            return "task1"
+            return "タスク1"
         case .task2:
-            return "task2"
+            return "タスク2"
         case .shortestDue:
             return "期限が近いもの"
         }
