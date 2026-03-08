@@ -9,6 +9,14 @@ import Foundation
 
 import SwiftUI
 
+private struct HistoryRowFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [UUID: CGRect] = [:]
+
+    static func reduce(value: inout [UUID: CGRect], nextValue: () -> [UUID: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
+    }
+}
+
 private enum HistoryTypeSelection: String, CaseIterable, Identifiable {
     case all
     case done
@@ -70,7 +78,8 @@ private enum HistoryTaskSelection: String, CaseIterable, Identifiable {
 }
 
 struct HistoryView: View {
-    
+    var onBackgroundSwipeLeft: () -> Void = {}
+
     @EnvironmentObject var historyStore: HistoryStore
     @Environment(\.calendar) private var calendar
     @State private var selectedType: HistoryTypeSelection = .all
@@ -78,6 +87,8 @@ struct HistoryView: View {
     @State private var editingEntry: HistoryEntry?
     @State private var editedDate: Date = Date()
     @State private var pressingEntryID: UUID?
+    @State private var rowFrames: [UUID: CGRect] = [:]
+    private let minSwipeDistance: CGFloat = 60
 
     private var filteredHistories: [HistoryEntry] {
         historyStore.histories.filter { entry in
@@ -131,13 +142,27 @@ struct HistoryView: View {
                         editingEntry = entry
                         editedDate = entry.date
                     }
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear.preference(
+                                key: HistoryRowFramePreferenceKey.self,
+                                value: [entry.id: proxy.frame(in: .named("historyList"))]
+                            )
+                        }
+                    )
                 }
                 .onDelete { offsets in
                     let ids = offsets.map { filteredHistories[$0].id }
                     historyStore.delete(ids: ids)
                 }
             }
+            .coordinateSpace(name: "historyList")
             .listStyle(.plain)
+            .scrollIndicators(.visible)
+            .simultaneousGesture(backgroundLeftSwipeGesture())
+            .onPreferenceChange(HistoryRowFramePreferenceKey.self) { frames in
+                rowFrames = frames
+            }
             .navigationTitle("履歴")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -240,6 +265,30 @@ struct HistoryView: View {
             }
         }
         .tint(.black)
+    }
+
+    private func backgroundLeftSwipeGesture() -> some Gesture {
+        DragGesture(minimumDistance: 20, coordinateSpace: .named("historyList"))
+            .onEnded { value in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+
+                guard abs(horizontal) > abs(vertical), horizontal < -minSwipeDistance else {
+                    return
+                }
+
+                guard !isSwipeStartedOnRow(value.startLocation) else {
+                    return
+                }
+
+                onBackgroundSwipeLeft()
+            }
+    }
+
+    private func isSwipeStartedOnRow(_ startLocation: CGPoint) -> Bool {
+        rowFrames.values.contains { frame in
+            (frame.minY ... frame.maxY).contains(startLocation.y)
+        }
     }
 
     private var filterMenu: some View {

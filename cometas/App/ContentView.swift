@@ -90,10 +90,19 @@ struct ContentView: View {
             SingleItemView(task: .secondary)
                 .highPriorityGesture(swipeGesture())
         case .history:
-            HistoryView()
+            HistoryView(onBackgroundSwipeLeft: {
+                selection = .settings
+            })
+                .overlay(alignment: .top) {
+                    Color.clear
+                        .frame(height: 120)
+                        .contentShape(Rectangle())
+                        .highPriorityGesture(historyTitleRightSwipeToSettingsGesture())
+                }
                 .simultaneousGesture(historyRightSwipeGesture())
         case .settings:
             SettingView()
+                .highPriorityGesture(swipeGesture())
         }
     }
 
@@ -135,6 +144,20 @@ struct ContentView: View {
             if currentIndex - 1 >= 0 {
                 selection = AppTab.allCases[currentIndex - 1]
             }
+        }
+    }
+
+    private func historyTitleRightSwipeToSettingsGesture() -> some Gesture {
+        DragGesture().onEnded { value in
+            let horizontal = value.translation.width
+            let vertical = value.translation.height
+
+            guard selection == .history else { return }
+            guard abs(horizontal) > abs(vertical), horizontal > minSwipeDistance else {
+                return
+            }
+
+            selection = .settings
         }
     }
 }
