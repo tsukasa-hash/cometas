@@ -9,6 +9,7 @@ import Foundation
 
 enum WidgetDoneActionAdapter {
     static func run() {
-        _ = RecordDoneUseCase(settings: UserDefaultsAppSettingsStore(task: .primary)).execute()
+        let task = AppSettings.widgetDisplayTask()
+        _ = RecordDoneUseCase(settings: UserDefaultsAppSettingsStore(task: task)).execute()
     }
 }

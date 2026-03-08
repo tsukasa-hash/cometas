@@ -7,6 +7,25 @@
 
 import Foundation
 
+enum WidgetDisplayTaskOption: String, CaseIterable, Identifiable {
+    case task1
+    case task2
+    case shortestDue
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .task1:
+            return "task1"
+        case .task2:
+            return "task2"
+        case .shortestDue:
+            return "期限が近いもの"
+        }
+    }
+}
+
 enum AppSettings {
     private struct Keys {
         let item: String
@@ -14,6 +33,8 @@ enum AppSettings {
         let lastDoneTimestamp: String
         let nextDueTimestamp: String
     }
+
+    private static let widgetDisplayTaskOptionKey = "widgetDisplayTaskOption"
 
     private static func keys(for task: ManagedTask) -> Keys {
         switch task {
@@ -77,5 +98,31 @@ enum AppSettings {
     static func setNextDueDate(_ date: Date, task: ManagedTask = .primary, defaults: UserDefaults = SharedStore.defaults) {
         let keys = keys(for: task)
         defaults.set(date.timeIntervalSince1970, forKey: keys.nextDueTimestamp)
+    }
+
+    static func widgetDisplayTaskOption(defaults: UserDefaults = SharedStore.defaults) -> WidgetDisplayTaskOption {
+        let raw = defaults.string(forKey: widgetDisplayTaskOptionKey)
+        return WidgetDisplayTaskOption(rawValue: raw ?? WidgetDisplayTaskOption.task1.rawValue) ?? .task1
+    }
+
+    static func setWidgetDisplayTaskOption(
+        _ option: WidgetDisplayTaskOption,
+        defaults: UserDefaults = SharedStore.defaults
+    ) {
+        defaults.set(option.rawValue, forKey: widgetDisplayTaskOptionKey)
+    }
+
+    static func widgetDisplayTask(defaults: UserDefaults = SharedStore.defaults) -> ManagedTask {
+        let option = widgetDisplayTaskOption(defaults: defaults)
+        switch option {
+        case .task1:
+            return .primary
+        case .task2:
+            return .secondary
+        case .shortestDue:
+            let primaryNextDue = nextDueDate(task: .primary, defaults: defaults)
+            let secondaryNextDue = nextDueDate(task: .secondary, defaults: defaults)
+            return primaryNextDue <= secondaryNextDue ? .primary : .secondary
+        }
     }
 }

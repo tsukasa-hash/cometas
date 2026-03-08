@@ -11,6 +11,7 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
     case task1
     case task2
     case history
+    case settings
 
     var id: String { rawValue }
 
@@ -22,6 +23,8 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
             return "task2"
         case .history:
             return "history"
+        case .settings:
+            return "setting"
         }
     }
 
@@ -33,6 +36,8 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
             return "list.bullet"
         case .history:
             return "rectangle.and.pencil.and.ellipsis"
+        case .settings:
+            return "gearshape"
         }
     }
 }
@@ -64,6 +69,13 @@ struct ContentView: View {
                     Image(systemName: AppTab.history.systemImage)
                     Text(AppTab.history.title)
                 }
+
+            contentView(for: .settings)
+                .tag(AppTab.settings)
+                .tabItem {
+                    Image(systemName: AppTab.settings.systemImage)
+                    Text(AppTab.settings.title)
+                }
         }
         .environmentObject(historyStore)
     }
@@ -80,6 +92,8 @@ struct ContentView: View {
         case .history:
             HistoryView()
                 .simultaneousGesture(historyRightSwipeGesture())
+        case .settings:
+            SettingView()
         }
     }
 

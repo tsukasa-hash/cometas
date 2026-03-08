@@ -18,27 +18,29 @@ struct Provider: TimelineProvider {
         in context: Context,
         completion: @escaping (SimpleEntry) -> Void
     ) {
-        let storedItemName = AppSettings.itemName()
-        let itemName = storedItemName.isEmpty ? "未設定" : storedItemName
-        let nextDueDate = AppSettings.nextDueDate()
-        completion(SimpleEntry(date: Date(), itemName: itemName, nextDueDate: nextDueDate))
+        completion(makeEntry(at: Date()))
     }
 
     func getTimeline(
         in context: Context,
         completion: @escaping (Timeline<SimpleEntry>) -> Void
     ) {
-        let storedItemName = AppSettings.itemName()
-        let itemName = storedItemName.isEmpty ? "未設定" : storedItemName
-        let nextDueDate = AppSettings.nextDueDate()
         let now = Date()
-        let entry = SimpleEntry(date: now, itemName: itemName, nextDueDate: nextDueDate)
+        let entry = makeEntry(at: now)
         let nextRefresh = nextDayBoundary(from: now)
         let timeline = Timeline(
             entries: [entry],
             policy: .after(nextRefresh)
         )
         completion(timeline)
+    }
+
+    private func makeEntry(at date: Date) -> SimpleEntry {
+        let task = AppSettings.widgetDisplayTask()
+        let storedItemName = AppSettings.itemName(task: task)
+        let itemName = storedItemName.isEmpty ? "未設定" : storedItemName
+        let nextDueDate = AppSettings.nextDueDate(task: task)
+        return SimpleEntry(date: date, itemName: itemName, nextDueDate: nextDueDate)
     }
 
     private func nextDayBoundary(from date: Date) -> Date {

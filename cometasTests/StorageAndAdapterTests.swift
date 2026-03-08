@@ -116,6 +116,56 @@ final class StorageAndAdapterTests: XCTestCase {
         XCTAssertEqual(loaded, .twoMonths)
     }
 
+    /// 対象ファイル名: AppSettings.swift
+    /// 対象メソッド名: AppSettings.setWidgetDisplayTaskOption(_:defaults:), AppSettings.widgetDisplayTaskOption(defaults:)
+    ///
+    /// 目的: Widget表示対象の設定値が保存・復元されることを保証する。
+    /// Given（前提）: `.task2` を保存する。
+    /// When（操作）: 設定値を再取得する。
+    /// Then（期待）: `.task2` を返す。
+    /// 回帰リスク: 設定画面の選択がWidget表示に反映されない。
+    func testWidgetDisplayTaskOptionPersistsSelectedValue() {
+        // Given（前提）
+        let suite = "cometas.tests.appsettings.widget.option.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        AppSettings.setWidgetDisplayTaskOption(.task2, defaults: defaults)
+
+        // When（操作）
+        let loaded = AppSettings.widgetDisplayTaskOption(defaults: defaults)
+
+        // Then（期待）
+        XCTAssertEqual(loaded, .task2)
+    }
+
+    /// 対象ファイル名: AppSettings.swift
+    /// 対象メソッド名: AppSettings.widgetDisplayTask(defaults:)
+    ///
+    /// 目的: 期限が短いもの選択時に nextDueDate が近い task を返すことを保証する。
+    /// Given（前提）: primary の期限を secondary より遅く保存し、設定を `.shortestDue` にする。
+    /// When（操作）: 表示対象 task を取得する。
+    /// Then（期待）: `.secondary` を返す。
+    /// 回帰リスク: Widget が「期限が短いもの」と異なるタスクを表示する。
+    func testWidgetDisplayTaskUsesShortestDueOption() {
+        // Given（前提）
+        let suite = "cometas.tests.appsettings.widget.shortest.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let primaryNext = Date(timeIntervalSince1970: 1_800_000_000)
+        let secondaryNext = Date(timeIntervalSince1970: 1_700_000_000)
+        AppSettings.setNextDueDate(primaryNext, task: .primary, defaults: defaults)
+        AppSettings.setNextDueDate(secondaryNext, task: .secondary, defaults: defaults)
+        AppSettings.setWidgetDisplayTaskOption(.shortestDue, defaults: defaults)
+
+        // When（操作）
+        let selected = AppSettings.widgetDisplayTask(defaults: defaults)
+
+        // Then（期待）
+        XCTAssertEqual(selected, .secondary)
+    }
+
     /// 対象ファイル名: HistoryRepository.swift
     /// 対象メソッド名: HistoryRepository.delete(ids:)
     ///
@@ -221,12 +271,12 @@ final class StorageAndAdapterTests: XCTestCase {
     /// 対象ファイル名: WidgetDoneActionAdapter.swift
     /// 対象メソッド名: WidgetDoneActionAdapter.run()
     ///
-    /// 目的: Widget経由の done が常に primary task で記録されることを保証する。
-    /// Given（前提）: primary/secondary に異なる設定値を保存する。
+    /// 目的: Widget経由の done がWidget表示設定に応じた task で記録されることを保証する。
+    /// Given（前提）: primary/secondary に異なる設定値を保存し、表示設定を task2 にする。
     /// When（操作）: WidgetDoneActionAdapter.run() を実行する。
-    /// Then（期待）: 追加される最新履歴は type=.done かつ task=.primary になる。
-    /// 回帰リスク: Widget操作が誤タスクに記録され、履歴整合性が崩れる。
-    func testWidgetDoneActionAdapterAlwaysRecordsPrimaryTask() {
+    /// Then（期待）: 追加される最新履歴は type=.done かつ task=.secondary になる。
+    /// 回帰リスク: 表示中タスクと done 対象がずれて履歴整合性が崩れる。
+    func testWidgetDoneActionAdapterRecordsTaskFromWidgetDisplaySetting() {
         // Given（前提）
         let backup = backupSharedStoreValues()
         defer { restoreSharedStoreValues(backup) }
@@ -235,6 +285,7 @@ final class StorageAndAdapterTests: XCTestCase {
         AppSettings.setInterval(.oneWeek, task: .primary)
         AppSettings.setItemName("secondary-item", task: .secondary)
         AppSettings.setInterval(.sixMonths, task: .secondary)
+        AppSettings.setWidgetDisplayTaskOption(.task2)
 
         let beforeCount = HistoryRepository.load().count
 
@@ -252,8 +303,8 @@ final class StorageAndAdapterTests: XCTestCase {
         }
 
         XCTAssertEqual(latest.type, .done)
-        XCTAssertEqual(latest.task, .primary)
-        XCTAssertEqual(latest.itemName, "primary-item")
+        XCTAssertEqual(latest.task, .secondary)
+        XCTAssertEqual(latest.itemName, "secondary-item")
     }
 
     private func backupSharedStoreValues() -> [String: Any?] {
@@ -263,6 +314,7 @@ final class StorageAndAdapterTests: XCTestCase {
             "intervalRawValue", "intervalRawValue2",
             "lastDoneTimestamp", "lastDoneTimestamp2",
             "nextDueTimestamp", "nextDueTimestamp2",
+            "widgetDisplayTaskOption",
             SharedStore.historyKey
         ]
 

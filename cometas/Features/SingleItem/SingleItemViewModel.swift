@@ -24,9 +24,7 @@ final class SingleItemViewModel: ObservableObject {
         let settings = UserDefaultsAppSettingsStore(task: task)
         let historyWriter = UserDefaultsHistoryEntryWriter()
         let calculator = DefaultNextDueDateCalculator()
-        let widgetReloader: WidgetTimelineReloading = task == .primary
-            ? WidgetCenterTimelineReloader()
-            : NoopWidgetTimelineReloader()
+        let widgetReloader: WidgetTimelineReloading = WidgetCenterTimelineReloader()
 
         self.recordDoneUseCase = RecordDoneUseCase(
             settings: settings,
