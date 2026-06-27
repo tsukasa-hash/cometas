@@ -45,7 +45,6 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
 struct ContentView: View {
     @State private var selection: AppTab = .task1
     @StateObject private var historyStore = HistoryStore()
-    private let minSwipeDistance: CGFloat = 60
 
     var body: some View {
         TabView(selection: $selection) {
@@ -89,83 +88,16 @@ struct ContentView: View {
                     .navigationTitle("タスク1")
                     .navigationBarTitleDisplayMode(.inline)
             }
-            .highPriorityGesture(swipeGesture())
         case .task2:
             NavigationStack {
                 SingleItemView(task: .secondary)
                     .navigationTitle("タスク2")
                     .navigationBarTitleDisplayMode(.inline)
             }
-            .highPriorityGesture(swipeGesture())
         case .history:
-            HistoryView(onBackgroundSwipeLeft: {
-                selection = .settings
-            })
-                .overlay(alignment: .top) {
-                    Color.clear
-                        .frame(width: 220, height: 80)
-                        .contentShape(Rectangle())
-                        .highPriorityGesture(historyTitleRightSwipeToSettingsGesture())
-                }
-                .simultaneousGesture(historyRightSwipeGesture())
+            HistoryView()
         case .settings:
             SettingView()
-                .highPriorityGesture(swipeGesture())
-        }
-    }
-
-    private func swipeGesture() -> some Gesture {
-        DragGesture().onEnded { value in
-            let horizontal = value.translation.width
-            let vertical = value.translation.height
-
-            guard abs(horizontal) > abs(vertical), abs(horizontal) > minSwipeDistance else {
-                return
-            }
-
-            guard let currentIndex = AppTab.allCases.firstIndex(of: selection) else {
-                return
-            }
-
-            if horizontal < 0, currentIndex + 1 < AppTab.allCases.count {
-                selection = AppTab.allCases[currentIndex + 1]
-            } else if horizontal > 0, currentIndex - 1 >= 0 {
-                selection = AppTab.allCases[currentIndex - 1]
-            }
-        }
-    }
-
-    private func historyRightSwipeGesture() -> some Gesture {
-        DragGesture().onEnded { value in
-            let horizontal = value.translation.width
-            let vertical = value.translation.height
-
-            guard selection == .history else { return }
-            guard abs(horizontal) > abs(vertical), horizontal > minSwipeDistance else {
-                return
-            }
-
-            guard let currentIndex = AppTab.allCases.firstIndex(of: selection) else {
-                return
-            }
-
-            if currentIndex - 1 >= 0 {
-                selection = AppTab.allCases[currentIndex - 1]
-            }
-        }
-    }
-
-    private func historyTitleRightSwipeToSettingsGesture() -> some Gesture {
-        DragGesture().onEnded { value in
-            let horizontal = value.translation.width
-            let vertical = value.translation.height
-
-            guard selection == .history else { return }
-            guard abs(horizontal) > abs(vertical), horizontal > minSwipeDistance else {
-                return
-            }
-
-            selection = .settings
         }
     }
 }
