@@ -10,6 +10,9 @@ import Foundation
 enum ManagedTask: Int, Codable, CaseIterable, Identifiable {
     case primary = 1
     case secondary = 2
+    case tertiary = 3
+    case quaternary = 4
+    case quinary = 5
 
     var id: Int { rawValue }
 
@@ -19,6 +22,12 @@ enum ManagedTask: Int, Codable, CaseIterable, Identifiable {
             return "タスク1"
         case .secondary:
             return "タスク2"
+        case .tertiary:
+            return "タスク3"
+        case .quaternary:
+            return "タスク4"
+        case .quinary:
+            return "タスク5"
         }
     }
 }

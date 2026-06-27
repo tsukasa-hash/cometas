@@ -11,12 +11,17 @@ struct SettingView: View {
     @State private var widgetDisplayTaskOption: WidgetDisplayTaskOption = AppSettings.widgetDisplayTaskOption()
     private let widgetReloader: WidgetTimelineReloading = WidgetCenterTimelineReloader()
 
+    private var availableOptions: [WidgetDisplayTaskOption] {
+        let taskOptions = AppSettings.registeredTasks().map { WidgetDisplayTaskOption(task: $0) }
+        return taskOptions + [.shortestDue]
+    }
+
     var body: some View {
         NavigationStack {
             Form {
                 Section("表示するタスク") {
                     Picker("", selection: $widgetDisplayTaskOption) {
-                        ForEach(WidgetDisplayTaskOption.allCases) { option in
+                        ForEach(availableOptions) { option in
                             Text(option.label).tag(option)
                         }
                     }
@@ -29,6 +34,12 @@ struct SettingView: View {
         }
         .onChange(of: widgetDisplayTaskOption) { _, newValue in
             AppSettings.setWidgetDisplayTaskOption(newValue)
+            widgetReloader.reload()
+        }
+        .onAppear {
+            guard !availableOptions.contains(widgetDisplayTaskOption) else { return }
+            widgetDisplayTaskOption = .shortestDue
+            AppSettings.setWidgetDisplayTaskOption(.shortestDue)
             widgetReloader.reload()
         }
     }

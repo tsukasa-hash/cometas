@@ -10,6 +10,7 @@ import Foundation
 enum Interval: String, CaseIterable, Identifiable, Codable {
     case tenDays
     case oneWeek
+    case twoWeeks
     case oneMonth
     case twoMonths
     case sixMonths
@@ -17,6 +18,7 @@ enum Interval: String, CaseIterable, Identifiable, Codable {
     static let displayOrder: [Interval] = [
         .oneWeek,
         .tenDays,
+        .twoWeeks,
         .oneMonth,
         .twoMonths,
         .sixMonths
@@ -28,6 +30,7 @@ enum Interval: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .oneWeek: return "1週間"
         case .tenDays: return "10日"
+        case .twoWeeks: return "2週間"
         case .oneMonth: return "1ヶ月"
         case .twoMonths: return "2ヶ月"
         case .sixMonths: return "6ヶ月"
@@ -38,6 +41,7 @@ enum Interval: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .oneWeek: return DateComponents(day: 7)
         case .tenDays: return DateComponents(day: 10)
+        case .twoWeeks: return DateComponents(day: 14)
         case .oneMonth: return DateComponents(month: 1)
         case .twoMonths: return DateComponents(month: 2)
         case .sixMonths: return DateComponents(month: 6)

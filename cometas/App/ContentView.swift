@@ -8,8 +8,7 @@
 import SwiftUI
 
 fileprivate enum AppTab: String, CaseIterable, Identifiable {
-    case task1
-    case task2
+    case tasks
     case history
     case settings
 
@@ -17,10 +16,8 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .task1:
-            return "タスク1"
-        case .task2:
-            return "タスク2"
+        case .tasks:
+            return "タスク"
         case .history:
             return "履歴"
         case .settings:
@@ -30,9 +27,7 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .task1:
-            return "list.bullet"
-        case .task2:
+        case .tasks:
             return "list.bullet"
         case .history:
             return "rectangle.and.pencil.and.ellipsis"
@@ -43,23 +38,16 @@ fileprivate enum AppTab: String, CaseIterable, Identifiable {
 }
 
 struct ContentView: View {
-    @State private var selection: AppTab = .task1
+    @State private var selection: AppTab = .tasks
     @StateObject private var historyStore = HistoryStore()
 
     var body: some View {
         TabView(selection: $selection) {
-            contentView(for: .task1)
-                .tag(AppTab.task1)
+            contentView(for: .tasks)
+                .tag(AppTab.tasks)
                 .tabItem {
-                    Image(systemName: AppTab.task1.systemImage)
-                    Text(AppTab.task1.title)
-                }
-
-            contentView(for: .task2)
-                .tag(AppTab.task2)
-                .tabItem {
-                    Image(systemName: AppTab.task2.systemImage)
-                    Text(AppTab.task2.title)
+                    Image(systemName: AppTab.tasks.systemImage)
+                    Text(AppTab.tasks.title)
                 }
 
             contentView(for: .history)
@@ -82,18 +70,8 @@ struct ContentView: View {
     @ViewBuilder
     private func contentView(for tab: AppTab) -> some View {
         switch tab {
-        case .task1:
-            NavigationStack {
-                SingleItemView(task: .primary)
-                    .navigationTitle("タスク1")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-        case .task2:
-            NavigationStack {
-                SingleItemView(task: .secondary)
-                    .navigationTitle("タスク2")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
+        case .tasks:
+            TaskListView()
         case .history:
             HistoryView()
         case .settings:

@@ -39,49 +39,23 @@ private enum HistoryTypeSelection: String, CaseIterable, Identifiable {
     }
 }
 
-private enum HistoryTaskSelection: String, CaseIterable, Identifiable {
-    case all
-    case task1
-    case task2
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .all:
-            return "すべて"
-        case .task1:
-            return "タスク1"
-        case .task2:
-            return "タスク2"
-        }
-    }
-
-    func includes(_ task: ManagedTask) -> Bool {
-        switch self {
-        case .all:
-            return true
-        case .task1:
-            return task == .primary
-        case .task2:
-            return task == .secondary
-        }
-    }
-}
-
 struct HistoryView: View {
     @EnvironmentObject var historyStore: HistoryStore
     @Environment(\.calendar) private var calendar
     @State private var selectedType: HistoryTypeSelection = .all
-    @State private var selectedTask: HistoryTaskSelection = .all
+    @State private var selectedTask: ManagedTask?
     @State private var editingEntry: HistoryEntry?
     @State private var editedDate: Date = Date()
     @State private var pressingEntryID: UUID?
 
     private var filteredHistories: [HistoryEntry] {
         historyStore.histories.filter { entry in
-            selectedType.includes(entry.type) && selectedTask.includes(entry.task)
+            selectedType.includes(entry.type) && (selectedTask == nil || selectedTask == entry.task)
         }
+    }
+
+    private var availableTasks: [ManagedTask] {
+        Array(Set(historyStore.histories.map(\.task))).sorted { $0.rawValue < $1.rawValue }
     }
     
     var body: some View {
@@ -255,11 +229,17 @@ struct HistoryView: View {
             }
 
             Section("タスク") {
-                ForEach(HistoryTaskSelection.allCases) { filter in
+                Button {
+                    selectedTask = nil
+                } label: {
+                    filterLabel("すべて", isSelected: selectedTask == nil)
+                }
+
+                ForEach(availableTasks) { task in
                     Button {
-                        selectedTask = filter
+                        selectedTask = task
                     } label: {
-                        filterLabel(filter.label, isSelected: selectedTask == filter)
+                        filterLabel(taskDisplayName(task), isSelected: selectedTask == task)
                     }
                 }
             }
@@ -278,5 +258,15 @@ struct HistoryView: View {
                 Text(title)
             }
         }
+    }
+
+    private func taskDisplayName(_ task: ManagedTask) -> String {
+        historyStore.histories.first(where: { $0.task == task })?.itemName.nonEmpty ?? task.label
+    }
+}
+
+private extension String {
+    var nonEmpty: String? {
+        isEmpty ? nil : self
     }
 }

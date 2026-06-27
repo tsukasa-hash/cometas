@@ -66,6 +66,12 @@ final class SingleItemViewModel: ObservableObject {
         recalculateFromLastDone()
     }
 
+    func setNextDueDate(_ date: Date) {
+        nextDueDate = date
+        AppSettings.setNextDueDate(date, task: task)
+        widgetReloader.reload()
+    }
+
     func handleDone(historyStore: HistoryStore) {
         let entry = recordDoneUseCase.execute()
         historyStore.insertPersisted(entry)

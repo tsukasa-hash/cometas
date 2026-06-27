@@ -29,6 +29,79 @@ final class StorageAndAdapterTests: XCTestCase {
         XCTAssertEqual(secondary, "B")
     }
 
+    /// 目的: 登録一覧キーがない既存データから、設定済みタスクを自動認識できることを保証する。
+    func testRegisteredTasksInfersLegacyAndAdditionalTaskKeys() {
+        let suite = "cometas.tests.appsettings.registered.migration.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        AppSettings.setItemName("既存タスク", task: .primary, defaults: defaults)
+        AppSettings.setItemName("追加タスク", task: .tertiary, defaults: defaults)
+
+        XCTAssertEqual(AppSettings.registeredTasks(defaults: defaults), [.primary, .tertiary])
+    }
+
+    /// 目的: 一覧で並べ替えたタスクの順序が保存され、未登録タスクが混入しないことを保証する。
+    func testSetRegisteredTaskOrderPersistsReorderedTasksOnly() {
+        let suite = "cometas.tests.appsettings.registered.order.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let now = Date(timeIntervalSince1970: 1_772_323_200)
+
+        _ = AppSettings.registerNextTask(defaults: defaults, now: now)
+        _ = AppSettings.registerNextTask(defaults: defaults, now: now)
+        _ = AppSettings.registerNextTask(defaults: defaults, now: now)
+
+        AppSettings.setRegisteredTaskOrder(
+            [.tertiary, .primary, .secondary, .quinary],
+            defaults: defaults
+        )
+
+        XCTAssertEqual(
+            AppSettings.registeredTasks(defaults: defaults),
+            [.tertiary, .primary, .secondary]
+        )
+    }
+
+    /// 目的: タスク追加が5件で停止し、各スロットが登録されることを保証する。
+    func testRegisterNextTaskStopsAtFiveTasks() {
+        let suite = "cometas.tests.appsettings.registered.limit.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let now = Date(timeIntervalSince1970: 1_772_323_200)
+
+        let added = (0..<AppSettings.maximumTaskCount).compactMap { _ in
+            AppSettings.registerNextTask(defaults: defaults, now: now)
+        }
+
+        XCTAssertEqual(added, ManagedTask.allCases)
+        XCTAssertEqual(AppSettings.registeredTasks(defaults: defaults), ManagedTask.allCases)
+        XCTAssertNil(AppSettings.registerNextTask(defaults: defaults, now: now))
+        XCTAssertEqual(AppSettings.itemName(task: .quinary, defaults: defaults), "新しいタスク")
+    }
+
+    /// 目的: 削除したタスクだけが登録一覧と設定から消え、空きスロットとして再利用できることを保証する。
+    func testDeleteTaskClearsOnlyTargetAndMakesSlotReusable() {
+        let suite = "cometas.tests.appsettings.registered.delete.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let now = Date(timeIntervalSince1970: 1_772_323_200)
+
+        _ = AppSettings.registerNextTask(defaults: defaults, now: now)
+        _ = AppSettings.registerNextTask(defaults: defaults, now: now)
+        AppSettings.setItemName("残すタスク", task: .primary, defaults: defaults)
+        AppSettings.setItemName("削除タスク", task: .secondary, defaults: defaults)
+        AppSettings.setWidgetDisplayTaskOption(.task2, defaults: defaults)
+
+        AppSettings.deleteTask(.secondary, defaults: defaults)
+
+        XCTAssertEqual(AppSettings.registeredTasks(defaults: defaults), [.primary])
+        XCTAssertEqual(AppSettings.itemName(task: .primary, defaults: defaults), "残すタスク")
+        XCTAssertEqual(AppSettings.itemName(task: .secondary, defaults: defaults), "")
+        XCTAssertEqual(AppSettings.widgetDisplayTaskOption(defaults: defaults), .shortestDue)
+        XCTAssertEqual(AppSettings.registerNextTask(defaults: defaults, now: now), .secondary)
+    }
+
     /// 対象ファイル名: AppSettings.swift
     /// 対象メソッド名: AppSettings.setInterval(_:task:defaults:), AppSettings.interval(task:defaults:)
     ///
@@ -164,6 +237,30 @@ final class StorageAndAdapterTests: XCTestCase {
 
         // Then（期待）
         XCTAssertEqual(selected, .secondary)
+    }
+
+    /// 目的: Widgetの期限最短判定が追加された5件目まで対象にすることを保証する。
+    func testWidgetDisplayTaskUsesShortestDueAcrossFiveRegisteredTasks() {
+        let suite = "cometas.tests.appsettings.widget.five.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        for task in ManagedTask.allCases {
+            AppSettings.setItemName(task.label, task: task, defaults: defaults)
+            AppSettings.setNextDueDate(
+                Date(timeIntervalSince1970: 1_800_000_000 + Double(task.rawValue * 10_000)),
+                task: task,
+                defaults: defaults
+            )
+        }
+        AppSettings.setNextDueDate(
+            Date(timeIntervalSince1970: 1_700_000_000),
+            task: .quinary,
+            defaults: defaults
+        )
+        AppSettings.setWidgetDisplayTaskOption(.shortestDue, defaults: defaults)
+
+        XCTAssertEqual(AppSettings.widgetDisplayTask(defaults: defaults), .quinary)
     }
 
     /// 対象ファイル名: HistoryRepository.swift
@@ -310,10 +407,11 @@ final class StorageAndAdapterTests: XCTestCase {
     private func backupSharedStoreValues() -> [String: Any?] {
         let defaults = SharedStore.defaults
         let keys = [
-            "item", "item2",
-            "intervalRawValue", "intervalRawValue2",
-            "lastDoneTimestamp", "lastDoneTimestamp2",
-            "nextDueTimestamp", "nextDueTimestamp2",
+            "item", "item2", "item3", "item4", "item5",
+            "intervalRawValue", "intervalRawValue2", "intervalRawValue3", "intervalRawValue4", "intervalRawValue5",
+            "lastDoneTimestamp", "lastDoneTimestamp2", "lastDoneTimestamp3", "lastDoneTimestamp4", "lastDoneTimestamp5",
+            "nextDueTimestamp", "nextDueTimestamp2", "nextDueTimestamp3", "nextDueTimestamp4", "nextDueTimestamp5",
+            "registeredTaskIDs",
             "widgetDisplayTaskOption",
             SharedStore.historyKey
         ]

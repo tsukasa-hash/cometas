@@ -26,6 +26,18 @@ final class DomainAndUseCaseTests: XCTestCase {
         XCTAssertEqual(result, expected)
     }
 
+    /// 目的: モックで採用した2週間間隔が14日として計算されることを保証する。
+    func testNextDueDateCalculatorAddsTwoWeeks() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let baseDate = Date(timeIntervalSince1970: 1_772_323_200) // 2026-02-28 00:00:00 UTC
+        let expected = Date(timeIntervalSince1970: 1_773_532_800) // 2026-03-14 00:00:00 UTC
+
+        let result = NextDueDateCalculator.calculate(from: baseDate, interval: .twoWeeks, calendar: calendar)
+
+        XCTAssertEqual(result, expected)
+    }
+
     /// 対象ファイル名: RecordDoneUseCase.swift
     /// 対象メソッド名: RecordDoneUseCase.execute(at:)
     ///
