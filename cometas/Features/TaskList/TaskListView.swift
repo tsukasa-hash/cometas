@@ -73,9 +73,9 @@ struct TaskListView: View {
                             task: task,
                             isExpanded: expandedTask == task,
                             onToggle: {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    expandedTask = expandedTask == task ? nil : task
-                                }
+                                setExpandedTaskWithoutAnimation(
+                                    expandedTask == task ? nil : task
+                                )
                             }
                         )
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -134,9 +134,7 @@ struct TaskListView: View {
 
                     DispatchQueue.main.async {
                         guard expandedTask == taskToClose else { return }
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            expandedTask = nil
-                        }
+                        setExpandedTaskWithoutAnimation(nil)
                     }
                 }
             )
@@ -148,9 +146,7 @@ struct TaskListView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         guard let newTask = viewModel.addTask() else { return }
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            expandedTask = newTask
-                        }
+                        setExpandedTaskWithoutAnimation(newTask)
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -168,6 +164,14 @@ struct TaskListView: View {
             NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
         ) { _ in
             viewModel.reload()
+        }
+    }
+
+    private func setExpandedTaskWithoutAnimation(_ task: ManagedTask?) {
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            expandedTask = task
         }
     }
 }
@@ -225,10 +229,12 @@ private struct TaskDisclosureRow: View {
                             .font(.body)
                             .foregroundStyle(.primary)
                             .lineLimit(1)
+                            .fixedSize(horizontal: false, vertical: true)
 
                         Text("\(viewModel.interval.label)ごと")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     Spacer(minLength: 8)
@@ -243,7 +249,7 @@ private struct TaskDisclosureRow: View {
                         .foregroundStyle(Color(uiColor: .tertiaryLabel))
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
-                .frame(minHeight: 56)
+                .frame(height: 56)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -251,7 +257,7 @@ private struct TaskDisclosureRow: View {
             if isExpanded {
                 Divider()
                 editor
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.identity)
             }
         }
         .onAppear {
