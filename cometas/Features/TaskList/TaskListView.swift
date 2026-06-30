@@ -22,6 +22,10 @@ final class TaskListViewModel: ObservableObject {
         tasks.count < AppSettings.maximumTaskCount
     }
 
+    var registrationLimitText: String {
+        "\(tasks.count)/\(AppSettings.maximumTaskCount)"
+    }
+
     func reload() {
         tasks = registrationStore.registeredTasks
     }
@@ -144,16 +148,24 @@ struct TaskListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        guard let newTask = viewModel.addTask() else { return }
-                        setExpandedTaskWithoutAnimation(newTask)
-                    } label: {
-                        Image(systemName: "plus")
+                    HStack(spacing: 10) {
+                        Text(viewModel.registrationLimitText)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("登録数の上限")
+                            .accessibilityValue(viewModel.registrationLimitText)
+
+                        Button {
+                            guard let newTask = viewModel.addTask() else { return }
+                            setExpandedTaskWithoutAnimation(newTask)
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        .disabled(!viewModel.canAddTask)
+                        .accessibilityLabel(
+                            viewModel.canAddTask ? "タスクを追加" : "登録上限の5件に達しています"
+                        )
                     }
-                    .disabled(!viewModel.canAddTask)
-                    .accessibilityLabel(
-                        viewModel.canAddTask ? "タスクを追加" : "登録上限の5件に達しています"
-                    )
                 }
             }
         }
