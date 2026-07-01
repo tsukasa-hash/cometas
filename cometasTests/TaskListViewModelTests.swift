@@ -3,14 +3,16 @@ import XCTest
 
 final class TaskListViewModelTests: XCTestCase {
     /// 目的: 一覧右上に表示する登録数/上限数の文字列が、現在の登録数と上限5を反映することを保証する。
-    func testRegistrationLimitTextReflectsCurrentCountAndMaximum() {
-        let store = StubTaskRegistrationStore(tasks: [.primary, .secondary])
-        let viewModel = TaskListViewModel(
-            registrationStore: store,
-            widgetReloader: NoopWidgetTimelineReloader()
-        )
+    func testRegistrationLimitTextReflectsCurrentCountAndMaximum() async {
+        await MainActor.run {
+            let store = StubTaskRegistrationStore(tasks: [.primary, .secondary])
+            let viewModel = TaskListViewModel(
+                registrationStore: store,
+                widgetReloader: NoopWidgetTimelineReloader()
+            )
 
-        XCTAssertEqual(viewModel.registrationLimitText, "2/5")
+            XCTAssertEqual(viewModel.registrationLimitText, "2/5")
+        }
     }
 }
 

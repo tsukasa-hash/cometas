@@ -63,10 +63,21 @@ final class TaskListViewModel: ObservableObject {
 }
 
 struct TaskListView: View {
-    @StateObject private var viewModel = TaskListViewModel()
+    @StateObject private var viewModel: TaskListViewModel
+    @StateObject private var tutorialViewModel: TaskTutorialViewModel
     @State private var expandedTask: ManagedTask?
     @State private var expandedTaskFrame: CGRect = .zero
     @State private var draggedTask: ManagedTask?
+
+    init(
+        viewModel: TaskListViewModel = TaskListViewModel(),
+        tutorialProgressStore: TaskTutorialProgressStoring = UserDefaultsTaskTutorialProgressStore()
+    ) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        _tutorialViewModel = StateObject(
+            wrappedValue: TaskTutorialViewModel(progressStore: tutorialProgressStore)
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -76,11 +87,18 @@ struct TaskListView: View {
                         TaskDisclosureRow(
                             task: task,
                             isExpanded: expandedTask == task,
+                            isTutorialTask: task == viewModel.tasks.first,
                             onToggle: {
                                 setExpandedTaskWithoutAnimation(
                                     expandedTask == task ? nil : task
                                 )
                             }
+                        )
+                        .taskTutorialTarget(
+                            task == viewModel.tasks.first ? .taskRow : nil
+                        )
+                        .taskTutorialTarget(
+                            task == viewModel.tasks.first ? .deleteRow : nil
                         )
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
@@ -148,13 +166,7 @@ struct TaskListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 10) {
-                        Text(viewModel.registrationLimitText)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel("登録数の上限")
-                            .accessibilityValue(viewModel.registrationLimitText)
-
+                    VStack(spacing: 0) {
                         Button {
                             guard let newTask = viewModel.addTask() else { return }
                             setExpandedTaskWithoutAnimation(newTask)
@@ -165,12 +177,29 @@ struct TaskListView: View {
                         .accessibilityLabel(
                             viewModel.canAddTask ? "タスクを追加" : "登録上限の5件に達しています"
                         )
+                        .taskTutorialTarget(.addButton)
+
+                        Text(viewModel.registrationLimitText)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("登録数の上限")
+                            .accessibilityValue(viewModel.registrationLimitText)
                     }
                 }
             }
         }
+        .taskTutorialOverlay(
+            step: tutorialViewModel.step,
+            onBack: handleTutorialBack,
+            onNext: handleTutorialNext,
+            onSkip: tutorialViewModel.finish
+        )
         .onAppear {
             viewModel.reload()
+            updateExpandedTask(for: tutorialViewModel.step)
+        }
+        .onChange(of: tutorialViewModel.step) { _, step in
+            updateExpandedTask(for: step)
         }
         .onReceive(
             NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
@@ -184,6 +213,28 @@ struct TaskListView: View {
         transaction.disablesAnimations = true
         withTransaction(transaction) {
             expandedTask = task
+        }
+    }
+
+    private func handleTutorialBack() {
+        tutorialViewModel.goBack()
+    }
+
+    private func handleTutorialNext() {
+        if tutorialViewModel.step == .addTask, viewModel.tasks.isEmpty {
+            _ = viewModel.addTask()
+        }
+        tutorialViewModel.advance()
+    }
+
+    private func updateExpandedTask(for step: TaskTutorialStep?) {
+        switch step {
+        case .recordDone:
+            setExpandedTaskWithoutAnimation(viewModel.tasks.first)
+        case .openDetails, .deleteTask:
+            setExpandedTaskWithoutAnimation(nil)
+        case .addTask, nil:
+            break
         }
     }
 }
@@ -224,11 +275,18 @@ private struct TaskDisclosureRow: View {
     @EnvironmentObject private var historyStore: HistoryStore
 
     let isExpanded: Bool
+    let isTutorialTask: Bool
     let onToggle: () -> Void
 
-    init(task: ManagedTask, isExpanded: Bool, onToggle: @escaping () -> Void) {
+    init(
+        task: ManagedTask,
+        isExpanded: Bool,
+        isTutorialTask: Bool,
+        onToggle: @escaping () -> Void
+    ) {
         _viewModel = StateObject(wrappedValue: SingleItemViewModel(task: task))
         self.isExpanded = isExpanded
+        self.isTutorialTask = isTutorialTask
         self.onToggle = onToggle
     }
 
@@ -328,6 +386,7 @@ private struct TaskDisclosureRow: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .frame(maxWidth: .infinity)
+                .taskTutorialTarget(isTutorialTask ? .doneButton : nil)
 
                 Button("今回はやらない") {
                     viewModel.handleSkip(historyStore: historyStore)
