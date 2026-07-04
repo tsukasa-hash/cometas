@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 
 enum TaskTutorialStep: Int, CaseIterable {
+    case welcome
     case addTask
     case openDetails
     case recordDone
@@ -11,6 +12,7 @@ enum TaskTutorialStep: Int, CaseIterable {
 
     var title: String {
         switch self {
+        case .welcome: return "コメタスへようこそ"
         case .addTask: return "タスクを追加"
         case .openDetails: return "詳細を開く"
         case .recordDone: return "実績を登録"
@@ -20,6 +22,8 @@ enum TaskTutorialStep: Int, CaseIterable {
 
     var message: String {
         switch self {
+        case .welcome:
+            return "かんたんなチュートリアルを始めます。"
         case .addTask:
             return "右上の＋から、忘れたくない家事を追加できます。"
         case .openDetails:
@@ -27,25 +31,28 @@ enum TaskTutorialStep: Int, CaseIterable {
         case .recordDone:
             return "作業が終わったら「やった」をタップ。実施日が履歴に残ります。"
         case .deleteTask:
-            return "タスクを左にスワイプすると、削除ボタンが現れます。"
+            return "タスクを左にスワイプすると、このように削除ボタンが現れます。"
         }
     }
 
     var actionTitle: String {
         switch self {
-        case .addTask: return "次へ"
-        case .openDetails: return "詳細を開く"
-        case .recordDone: return "次へ"
+        case .welcome, .addTask, .openDetails, .recordDone: return "次へ"
         case .deleteTask: return "はじめる"
         }
     }
 
-    var target: TaskTutorialTarget {
+    var showsPrimaryAction: Bool {
+        true
+    }
+
+    var target: TaskTutorialTarget? {
         switch self {
+        case .welcome: return nil
         case .addTask: return .addButton
         case .openDetails: return .taskRow
         case .recordDone: return .doneButton
-        case .deleteTask: return .deleteRow
+        case .deleteTask: return .deletePreview
         }
     }
 }
@@ -57,7 +64,7 @@ final class TaskTutorialViewModel: ObservableObject {
 
     init(progressStore: TaskTutorialProgressStoring = UserDefaultsTaskTutorialProgressStore()) {
         self.progressStore = progressStore
-        step = progressStore.hasCompletedCurrentTutorial ? nil : .addTask
+        step = progressStore.hasCompletedCurrentTutorial ? nil : .welcome
     }
 
     func advance() {
@@ -67,19 +74,27 @@ final class TaskTutorialViewModel: ObservableObject {
             finish()
             return
         }
-        self.step = nextStep
+        setStepWithoutAnimation(nextStep)
     }
 
     func goBack() {
         guard let step, let previousStep = TaskTutorialStep(rawValue: step.rawValue - 1) else {
             return
         }
-        self.step = previousStep
+        setStepWithoutAnimation(previousStep)
     }
 
     func finish() {
         progressStore.markCurrentTutorialCompleted()
-        step = nil
+        setStepWithoutAnimation(nil)
+    }
+
+    private func setStepWithoutAnimation(_ step: TaskTutorialStep?) {
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            self.step = step
+        }
     }
 }
 
@@ -87,7 +102,7 @@ enum TaskTutorialTarget: Hashable {
     case addButton
     case taskRow
     case doneButton
-    case deleteRow
+    case deletePreview
 }
 
 private struct TaskTutorialTargetPreferenceKey: PreferenceKey {
@@ -102,10 +117,14 @@ private struct TaskTutorialTargetPreferenceKey: PreferenceKey {
 }
 
 extension View {
+    @ViewBuilder
     func taskTutorialTarget(_ target: TaskTutorialTarget?) -> some View {
-        anchorPreference(key: TaskTutorialTargetPreferenceKey.self, value: .bounds) { anchor in
-            guard let target else { return [:] }
-            return [target: anchor]
+        if let target {
+            anchorPreference(key: TaskTutorialTargetPreferenceKey.self, value: .bounds) { anchor in
+                [target: anchor]
+            }
+        } else {
+            self
         }
     }
 
@@ -120,7 +139,9 @@ extension View {
                 if let step {
                     TaskTutorialOverlay(
                         step: step,
-                        targetFrame: targets[step.target].map { proxy[$0] },
+                        targetFrame: step.target.flatMap { target in
+                            targets[target].map { proxy[$0] }
+                        },
                         containerSize: proxy.size,
                         onBack: onBack,
                         onNext: onNext,
@@ -128,6 +149,7 @@ extension View {
                     )
                 }
             }
+            .ignoresSafeArea()
         }
     }
 }
@@ -147,12 +169,19 @@ private struct TaskTutorialOverlay: View {
         return targetFrame.insetBy(dx: -8, dy: -7)
     }
 
+    private var showsHighlight: Bool {
+        step.target != nil
+    }
+
     private var showsBubbleAboveTarget: Bool {
         highlightedFrame.midY > containerSize.height * 0.56
     }
 
     private var bubbleTop: CGFloat {
         let estimatedHeight: CGFloat = 205
+        if !showsHighlight {
+            return max(90, (containerSize.height - estimatedHeight) / 2)
+        }
         if showsBubbleAboveTarget {
             return max(70, highlightedFrame.minY - estimatedHeight - 18)
         }
@@ -167,14 +196,22 @@ private struct TaskTutorialOverlay: View {
         ZStack(alignment: .top) {
             spotlight
 
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(.white, lineWidth: 2)
-                .frame(width: highlightedFrame.width, height: highlightedFrame.height)
-                .position(x: highlightedFrame.midX, y: highlightedFrame.midY)
-                .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {}
+
+            if showsHighlight {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(.white, lineWidth: 2)
+                    .frame(width: highlightedFrame.width, height: highlightedFrame.height)
+                    .position(x: highlightedFrame.midX, y: highlightedFrame.midY)
+                    .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
+                    .allowsHitTesting(false)
+            }
 
             TutorialBubble(
                 step: step,
+                showsPointer: showsHighlight,
                 pointsDown: showsBubbleAboveTarget,
                 pointerOffset: pointerOffset,
                 onBack: onBack,
@@ -184,28 +221,55 @@ private struct TaskTutorialOverlay: View {
             .padding(.horizontal, 24)
             .offset(y: bubbleTop)
         }
-        .ignoresSafeArea()
-        .transition(.opacity)
         .zIndex(100)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
     }
 
     private var spotlight: some View {
-        Path { path in
-            path.addRect(CGRect(origin: .zero, size: containerSize))
-            path.addRoundedRect(
-                in: highlightedFrame,
-                cornerSize: CGSize(width: 12, height: 12)
-            )
+        if !showsHighlight {
+            return AnyView(Color.black.opacity(0.52))
         }
-        .fill(.black.opacity(0.52), style: FillStyle(eoFill: true))
-        .contentShape(Rectangle())
+
+        let containerFrame = CGRect(origin: .zero, size: containerSize)
+        let hole = highlightedFrame.intersection(containerFrame)
+
+        return AnyView(ZStack(alignment: .topLeading) {
+            scrimRectangle(
+                CGRect(x: 0, y: 0, width: containerSize.width, height: hole.minY)
+            )
+            scrimRectangle(
+                CGRect(
+                    x: 0,
+                    y: hole.maxY,
+                    width: containerSize.width,
+                    height: containerSize.height - hole.maxY
+                )
+            )
+            scrimRectangle(
+                CGRect(x: 0, y: hole.minY, width: hole.minX, height: hole.height)
+            )
+            scrimRectangle(
+                CGRect(
+                    x: hole.maxX,
+                    y: hole.minY,
+                    width: containerSize.width - hole.maxX,
+                    height: hole.height
+                )
+            )
+        })
+    }
+
+    private func scrimRectangle(_ frame: CGRect) -> some View {
+        Color.black.opacity(0.52)
+            .frame(width: max(0, frame.width), height: max(0, frame.height))
+            .offset(x: frame.minX, y: frame.minY)
     }
 }
 
 private struct TutorialBubble: View {
     let step: TaskTutorialStep
+    let showsPointer: Bool
     let pointsDown: Bool
     let pointerOffset: CGFloat
     let onBack: () -> Void
@@ -214,7 +278,7 @@ private struct TutorialBubble: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !pointsDown { pointer }
+            if showsPointer, !pointsDown { pointer }
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -238,23 +302,25 @@ private struct TutorialBubble: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: 8) {
-                    if step != .addTask {
+                    if step != .welcome {
                         Button("戻る", action: onBack)
                             .buttonStyle(.borderless)
                     }
 
                     Spacer()
 
-                    Button(step.actionTitle, action: onNext)
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.regular)
+                    if step.showsPrimaryAction {
+                        Button(step.actionTitle, action: onNext)
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.regular)
+                    }
                 }
             }
             .padding(18)
             .background(.background, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
 
-            if pointsDown { pointer.rotationEffect(.degrees(180)) }
+            if showsPointer, pointsDown { pointer.rotationEffect(.degrees(180)) }
         }
     }
 

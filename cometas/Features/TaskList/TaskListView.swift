@@ -84,21 +84,30 @@ struct TaskListView: View {
             List {
                 Section {
                     ForEach(viewModel.tasks) { task in
-                        TaskDisclosureRow(
-                            task: task,
-                            isExpanded: expandedTask == task,
-                            isTutorialTask: task == viewModel.tasks.first,
-                            onToggle: {
-                                setExpandedTaskWithoutAnimation(
-                                    expandedTask == task ? nil : task
-                                )
+                        let showsTutorialDeleteAction = tutorialViewModel.step == .deleteTask
+                            && task == viewModel.tasks.first
+
+                        ZStack(alignment: .trailing) {
+                            if showsTutorialDeleteAction {
+                                TutorialDeleteActionPreview()
+                                    .transition(.move(edge: .trailing))
                             }
-                        )
+
+                            TaskDisclosureRow(
+                                task: task,
+                                isExpanded: expandedTask == task,
+                                isTutorialTask: task == viewModel.tasks.first,
+                                onToggle: {
+                                    toggleTask(task)
+                                }
+                            )
+                            .background(Color(uiColor: .systemBackground))
+                            .offset(x: showsTutorialDeleteAction ? -80 : 0)
+                        }
+                        .clipped()
+                        .animation(.easeInOut(duration: 0.25), value: showsTutorialDeleteAction)
                         .taskTutorialTarget(
-                            task == viewModel.tasks.first ? .taskRow : nil
-                        )
-                        .taskTutorialTarget(
-                            task == viewModel.tasks.first ? .deleteRow : nil
+                            showsTutorialDeleteAction ? .deletePreview : nil
                         )
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
@@ -139,6 +148,16 @@ struct TaskListView: View {
                             }
                         }
                     }
+                } header: {
+                    HStack {
+                        Spacer()
+                        Text(viewModel.registrationLimitText)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("登録数の上限")
+                            .accessibilityValue(viewModel.registrationLimitText)
+                    }
+                    .textCase(nil)
                 }
             }
             .coordinateSpace(name: "taskList")
@@ -163,6 +182,7 @@ struct TaskListView: View {
             .listStyle(.insetGrouped)
             .listSectionSpacing(.compact)
             .scrollBounceBehavior(.basedOnSize)
+            .navigationTitle("タスク一覧")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -179,11 +199,6 @@ struct TaskListView: View {
                         )
                         .taskTutorialTarget(.addButton)
 
-                        Text(viewModel.registrationLimitText)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel("登録数の上限")
-                            .accessibilityValue(viewModel.registrationLimitText)
                     }
                 }
             }
@@ -220,6 +235,10 @@ struct TaskListView: View {
         tutorialViewModel.goBack()
     }
 
+    private func toggleTask(_ task: ManagedTask) {
+        setExpandedTaskWithoutAnimation(expandedTask == task ? nil : task)
+    }
+
     private func handleTutorialNext() {
         if tutorialViewModel.step == .addTask, viewModel.tasks.isEmpty {
             _ = viewModel.addTask()
@@ -233,7 +252,7 @@ struct TaskListView: View {
             setExpandedTaskWithoutAnimation(viewModel.tasks.first)
         case .openDetails, .deleteTask:
             setExpandedTaskWithoutAnimation(nil)
-        case .addTask, nil:
+        case .welcome, .addTask, nil:
             break
         }
     }
@@ -323,6 +342,7 @@ private struct TaskDisclosureRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .taskTutorialTarget(isTutorialTask ? .taskRow : nil)
 
             if isExpanded {
                 Divider()
@@ -397,6 +417,23 @@ private struct TaskDisclosureRow: View {
             .controlSize(.regular)
             .padding(.vertical, 10)
         }
+    }
+}
+
+private struct TutorialDeleteActionPreview: View {
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "trash")
+                .font(.body.weight(.semibold))
+            Text("削除")
+                .font(.caption2.weight(.semibold))
+        }
+        .foregroundStyle(.white)
+        .frame(width: 80)
+        .frame(maxHeight: .infinity)
+        .background(Color(uiColor: .systemRed))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("削除ボタンの例")
     }
 }
 

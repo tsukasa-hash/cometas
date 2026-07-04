@@ -6,7 +6,7 @@ protocol TaskTutorialProgressStoring {
 }
 
 struct UserDefaultsTaskTutorialProgressStore: TaskTutorialProgressStoring {
-    static let currentTutorialVersion = 1
+    static let currentTutorialVersion = 2
 
     private let defaults: UserDefaults
     private let completedVersionKey = "taskTutorialCompletedVersion"
