@@ -102,7 +102,7 @@ enum AppSettings {
     }
 
     static let defaultInterval: Interval = .twoMonths
-    static let maximumTaskCount = ManagedTask.allCases.count
+    static let maximumTaskCount = 5
 
     static func registeredTasks(defaults: UserDefaults = SharedStore.defaults) -> [ManagedTask] {
         if let storedValues = defaults.array(forKey: registeredTaskIDsKey) {

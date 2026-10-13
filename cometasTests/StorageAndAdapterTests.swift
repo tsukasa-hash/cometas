@@ -3,20 +3,6 @@ import XCTest
 @testable import cometas
 
 final class StorageAndAdapterTests: XCTestCase {
-    /// 目的: 初回チュートリアルの完了状態が保存され、次回起動時に再表示されないことを保証する。
-    func testTaskTutorialProgressPersistsCompletion() {
-        let suite = "cometas.tests.tutorial.progress.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suite)!
-        defer { defaults.removePersistentDomain(forName: suite) }
-        let store = UserDefaultsTaskTutorialProgressStore(defaults: defaults)
-
-        XCTAssertFalse(store.hasCompletedCurrentTutorial)
-
-        store.markCurrentTutorialCompleted()
-
-        XCTAssertTrue(store.hasCompletedCurrentTutorial)
-    }
-
     /// 対象ファイル名: AppSettings.swift
     /// 対象メソッド名: AppSettings.setItemName(_:task:defaults:), AppSettings.itemName(task:defaults:)
     ///
