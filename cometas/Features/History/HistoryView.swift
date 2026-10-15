@@ -89,9 +89,9 @@ struct HistoryView: View {
                                 } else {
                                     Image(systemName: "arrow.uturn.backward")
                                         .font(.system(size: 15, weight: .medium))
-                                        .foregroundStyle(.orange)
+                                        .foregroundStyle(sage)
                                         .frame(width: 30, height: 30)
-                                        .background(Color.orange.opacity(0.12), in: Circle())
+                                        .background(sageSoft, in: Circle())
                                 }
 
                                 VStack(alignment: .leading, spacing: 5) {
