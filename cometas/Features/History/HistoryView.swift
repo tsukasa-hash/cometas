@@ -48,6 +48,14 @@ struct HistoryView: View {
     @State private var editedDate: Date = Date()
     @State private var pressingEntryID: UUID?
 
+    private let paper = Color(red: 245 / 255, green: 243 / 255, blue: 237 / 255)
+    private let card = Color(red: 251 / 255, green: 250 / 255, blue: 246 / 255)
+    private let ink = Color(red: 41 / 255, green: 45 / 255, blue: 43 / 255)
+    private let muted = Color(red: 134 / 255, green: 137 / 255, blue: 130 / 255)
+    private let sage = Color(red: 104 / 255, green: 123 / 255, blue: 107 / 255)
+    private let sageSoft = Color(red: 223 / 255, green: 229 / 255, blue: 220 / 255)
+    private let line = Color(red: 226 / 255, green: 224 / 255, blue: 217 / 255)
+
     private var filteredHistories: [HistoryEntry] {
         historyStore.histories.filter { entry in
             selectedType.includes(entry.type) && (selectedTask == nil || selectedTask == entry.task)
@@ -61,65 +69,104 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(filteredHistories) { entry in
-                    HStack {
-                        Image(systemName: entry.type.systemImage)
-                            .foregroundStyle(entry.type == .done ? .green : .orange)
-                        
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(entry.type.label)
-                                    .font(.headline)
-                                Text(entry.itemName)
-                                    .font(.headline)
-                            }
-                            Text(entry.date, format: DatePresentation.ymdFormat)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.white)
-                    }
-                    .listRowBackground(
-                        (pressingEntryID == entry.id) ? Color(uiColor: .systemGray5) : Color.clear
-                    )
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            historyStore.delete(ids: [entry.id])
-                        } label: {
-                            Label("削除", systemImage: "trash")
-                        }
+                Section {
+                    if filteredHistories.isEmpty {
+                        Text("記録はまだありません。")
+                            .font(.system(size: 13))
+                            .foregroundStyle(muted)
+                            .frame(maxWidth: .infinity, minHeight: 100)
+                            .listRowBackground(card)
+                            .listRowSeparator(.hidden)
+                    } else {
+                        ForEach(Array(filteredHistories.enumerated()), id: \.element.id) { index, entry in
+                            HStack(spacing: 13) {
+                                if entry.type == .done {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(sage)
+                                        .frame(width: 30, height: 30)
+                                        .background(sageSoft, in: Circle())
+                                } else {
+                                    Image(systemName: "arrow.uturn.backward")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(.orange)
+                                        .frame(width: 30, height: 30)
+                                        .background(Color.orange.opacity(0.12), in: Circle())
+                                }
 
-                        Button {
-                            editingEntry = entry
-                            editedDate = entry.date
-                        } label: {
-                            Label("編集", systemImage: "pencil.line")
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(entry.itemName)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(ink)
+                                    Text(DatePresentation.yearMonthDayWithoutPadding(entry.date))
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(muted)
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .frame(minHeight: 72)
+                            .padding(.horizontal, 16)
+                            .background(pressingEntryID == entry.id ? sageSoft.opacity(0.55) : card)
+                            .overlay(alignment: .bottom) {
+                                if index < filteredHistories.count - 1 {
+                                    Rectangle().fill(line).frame(height: 1).padding(.leading, 59)
+                                }
+                            }
+                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                            .listRowBackground(paper)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(card)
+                            .contentShape(Rectangle())
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button(role: .destructive) {
+                                    historyStore.delete(ids: [entry.id])
+                                } label: {
+                                    Label("削除", systemImage: "trash")
+                                }
+
+                                Button {
+                                    editingEntry = entry
+                                    editedDate = entry.date
+                                } label: {
+                                    Label("編集", systemImage: "pencil.line")
+                                }
+                                .tint(.orange)
+                            }
+                            .onLongPressGesture(minimumDuration: 0.5, pressing: { isPressing in
+                                pressingEntryID = isPressing ? entry.id : nil
+                            }) {
+                                editingEntry = entry
+                                editedDate = entry.date
+                            }
                         }
-                        .tint(.orange)
                     }
-                    .onLongPressGesture(minimumDuration: 0.5, pressing: { isPressing in
-                        pressingEntryID = isPressing ? entry.id : nil
-                    }) {
-                        editingEntry = entry
-                        editedDate = entry.date
+                } header: {
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("cometas")
+                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                                .tracking(0.7)
+                                .foregroundStyle(sage)
+                            Text("これまでの記録")
+                                .font(.system(size: 29, weight: .bold))
+                                .tracking(-0.8)
+                                .foregroundStyle(ink)
+                        }
+                        Spacer()
+                        filterMenu
                     }
-                }
-                .onDelete { offsets in
-                    let ids = offsets.map { filteredHistories[$0].id }
-                    historyStore.delete(ids: ids)
+                    .textCase(nil)
+                    .padding(.top, 12)
+                    .padding(.bottom, 18)
                 }
             }
-            .listStyle(.plain)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(paper.ignoresSafeArea())
             .scrollIndicators(.visible)
-            .navigationTitle("履歴")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    filterMenu
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
         }
+        .tint(sage)
         .sheet(item: $editingEntry) { entry in
             NavigationStack {
                 VStack(spacing: 16) {

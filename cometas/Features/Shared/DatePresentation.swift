@@ -16,6 +16,14 @@ enum DatePresentation {
         .month(.twoDigits)
         .day(.twoDigits)
 
+    static func yearMonthDayWithoutPadding(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.dateFormat = "yyyy年M月d日"
+        return formatter.string(from: date)
+    }
+
     static func remainingDaysText(
         until dueDate: Date,
         now: Date = Date(),

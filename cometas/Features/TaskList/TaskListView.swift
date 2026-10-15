@@ -1,7 +1,6 @@
 import Combine
 import SwiftUI
 import UIKit
-import UniformTypeIdentifiers
 
 final class TaskListViewModel: ObservableObject {
     @Published private(set) var tasks: [ManagedTask] = []
@@ -61,7 +60,13 @@ struct TaskListView: View {
     @StateObject private var viewModel: TaskListViewModel
     @State private var expandedTask: ManagedTask?
     @State private var draggedTask: ManagedTask?
+    @State private var lastReorderTarget: ManagedTask?
+    @State private var taskFrames: [ManagedTask: CGRect] = [:]
+    @State private var reorderModeBeganAt = Date.distantPast
     @State private var isShowingCreation = false
+    @State private var isReorderingTasks = false
+    @State private var taskPendingDeletion: ManagedTask?
+    @State private var isShowingDeleteConfirmation = false
 
     init(viewModel: TaskListViewModel = TaskListViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -82,7 +87,7 @@ struct TaskListView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     header
-                    Text("\(dueSoonCount)件がもうすぐです")
+                    Text(isReorderingTasks ? "長押しして移動・削除できます" : "\(dueSoonCount)件がもうすぐです")
                         .font(.system(size: 13))
                         .foregroundStyle(TaskHomeStyle.muted)
                         .padding(.top, 21)
@@ -90,37 +95,16 @@ struct TaskListView: View {
 
                     LazyVStack(spacing: 10) {
                         ForEach(viewModel.tasks) { task in
-                            TaskDisclosureRow(
-                                task: task,
-                                isExpanded: expandedTask == task,
-                                onToggle: { withAnimation(.easeInOut(duration: 0.2)) {
-                                    expandedTask = expandedTask == task ? nil : task
-                                } }
-                            )
-                            .environmentObject(historyStore)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    viewModel.deleteTask(task)
-                                    if expandedTask == task { expandedTask = nil }
-                                } label: { Label("削除", systemImage: "trash") }
+                            if isReorderingTasks {
+                                taskCard(task)
+                                    .simultaneousGesture(cardDragGesture(for: task))
+                            } else {
+                                taskCard(task)
                             }
-                            .onDrag {
-                                draggedTask = task
-                                return NSItemProvider(object: String(task.rawValue) as NSString)
-                            }
-                            .onDrop(of: [UTType.plainText], delegate: TaskRowDropDelegate(
-                                targetTask: task,
-                                draggedTask: $draggedTask,
-                                moveTask: { source, target in
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        viewModel.moveTask(source, to: target)
-                                    }
-                                }
-                            ))
                         }
                     }
 
-                    if viewModel.canAddTask {
+                    if viewModel.canAddTask && !isReorderingTasks {
                         Button {
                             isShowingCreation = true
                         } label: {
@@ -143,6 +127,27 @@ struct TaskListView: View {
             }
             .background(TaskHomeStyle.paper.ignoresSafeArea())
             .scrollBounceBehavior(.basedOnSize)
+            .coordinateSpace(name: "taskList")
+            .onPreferenceChange(TaskCardFramePreferenceKey.self) { taskFrames = $0 }
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+                    guard !isReorderingTasks else { return }
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        expandedTask = nil
+                        reorderModeBeganAt = Date()
+                        isReorderingTasks = true
+                    }
+                }
+            )
+            .simultaneousGesture(
+                SpatialTapGesture().onEnded { tap in
+                    guard isReorderingTasks,
+                          Date().timeIntervalSince(reorderModeBeganAt) > 0.6,
+                          !taskFrames.values.contains(where: { $0.contains(tap.location) })
+                    else { return }
+                    leaveReorderingMode()
+                }
+            )
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $isShowingCreation) {
                 TaskCreationView(onSave: { name, interval, lastDoneDate in
@@ -156,6 +161,18 @@ struct TaskListView: View {
             }
         }
         .tint(TaskHomeStyle.sage)
+        .alert("タスクを削除しますか？", isPresented: $isShowingDeleteConfirmation) {
+            Button("削除", role: .destructive) {
+                if let taskPendingDeletion {
+                    viewModel.deleteTask(taskPendingDeletion)
+                    if expandedTask == taskPendingDeletion { expandedTask = nil }
+                }
+                taskPendingDeletion = nil
+            }
+            Button("キャンセル", role: .cancel) { taskPendingDeletion = nil }
+        } message: {
+            Text(taskPendingDeletion.map { AppSettings.itemName(task: $0) } ?? "このタスク")
+        }
         .onAppear { viewModel.reload() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             viewModel.reload()
@@ -175,16 +192,87 @@ struct TaskListView: View {
                     .foregroundStyle(TaskHomeStyle.ink)
             }
             Spacer()
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Text("\(viewModel.tasks.count)")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(TaskHomeStyle.ink)
-                Text("/ 5")
-                    .font(.system(size: 11))
-                    .foregroundStyle(TaskHomeStyle.muted)
+            if isReorderingTasks {
+                Button("完了") {
+                    leaveReorderingMode()
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(TaskHomeStyle.sage)
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text("\(viewModel.tasks.count)")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(TaskHomeStyle.ink)
+                    Text("/ 5")
+                        .font(.system(size: 11))
+                        .foregroundStyle(TaskHomeStyle.muted)
+                }
             }
         }
 //        .padding(.top, 2)
+    }
+
+    private func taskCard(_ task: ManagedTask) -> some View {
+        TaskDisclosureRow(
+            task: task,
+            isExpanded: !isReorderingTasks && expandedTask == task,
+            isReordering: isReorderingTasks,
+            onToggle: {
+                guard !isReorderingTasks else { return }
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    expandedTask = expandedTask == task ? nil : task
+                }
+            },
+            onDelete: {
+                taskPendingDeletion = task
+                isShowingDeleteConfirmation = true
+            }
+        )
+        .environmentObject(historyStore)
+        .background {
+            GeometryReader { proxy in
+                Color.clear.preference(
+                    key: TaskCardFramePreferenceKey.self,
+                    value: [task: proxy.frame(in: .named("taskList"))]
+                )
+            }
+        }
+    }
+
+    private func cardDragGesture(for task: ManagedTask) -> some Gesture {
+        DragGesture(minimumDistance: 8, coordinateSpace: .named("taskList"))
+            .onChanged { value in
+                if draggedTask == nil { draggedTask = task }
+                guard let draggedTask,
+                      let target = taskFrames.first(where: { $0.value.contains(value.location) })?.key,
+                      target != draggedTask,
+                      target != lastReorderTarget
+                else { return }
+                lastReorderTarget = target
+                withAnimation(.easeInOut(duration: 0.16)) {
+                    viewModel.moveTask(draggedTask, to: target)
+                }
+            }
+            .onEnded { _ in
+                draggedTask = nil
+                lastReorderTarget = nil
+            }
+    }
+
+    private func leaveReorderingMode() {
+        withAnimation(.easeInOut(duration: 0.18)) {
+            isReorderingTasks = false
+            draggedTask = nil
+            lastReorderTarget = nil
+        }
+    }
+}
+
+private struct TaskCardFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [ManagedTask: CGRect] = [:]
+
+    static func reduce(value: inout [ManagedTask: CGRect], nextValue: () -> [ManagedTask: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, latest in latest })
     }
 }
 
@@ -284,30 +372,27 @@ private struct TaskCreationView: View {
     }
 }
 
-private struct TaskRowDropDelegate: DropDelegate {
-    let targetTask: ManagedTask
-    @Binding var draggedTask: ManagedTask?
-    let moveTask: (ManagedTask, ManagedTask) -> Void
-
-    func dropEntered(info: DropInfo) {
-        guard let draggedTask, draggedTask != targetTask else { return }
-        moveTask(draggedTask, targetTask)
-    }
-    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
-    func performDrop(info: DropInfo) -> Bool { draggedTask = nil; return true }
-}
-
 private struct TaskDisclosureRow: View {
     @StateObject private var viewModel: SingleItemViewModel
     @EnvironmentObject private var historyStore: HistoryStore
     @State private var isEditing = false
     let isExpanded: Bool
+    let isReordering: Bool
     let onToggle: () -> Void
+    let onDelete: () -> Void
 
-    init(task: ManagedTask, isExpanded: Bool, onToggle: @escaping () -> Void) {
+    init(
+        task: ManagedTask,
+        isExpanded: Bool,
+        isReordering: Bool,
+        onToggle: @escaping () -> Void,
+        onDelete: @escaping () -> Void
+    ) {
         _viewModel = StateObject(wrappedValue: SingleItemViewModel(task: task))
         self.isExpanded = isExpanded
+        self.isReordering = isReordering
         self.onToggle = onToggle
+        self.onDelete = onDelete
     }
 
     private var dueText: String {
@@ -354,18 +439,32 @@ private struct TaskDisclosureRow: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                Button {
-                    viewModel.handleDone(historyStore: historyStore)
-                } label: {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(TaskHomeStyle.sage)
-                        .frame(width: 34, height: 34)
-                        .overlay(Circle().stroke(TaskHomeStyle.sage.opacity(0.26), lineWidth: 1))
+                if isReordering {
+                    Button(action: onDelete) {
+                        Image(systemName: "minus")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 34, height: 34)
+                            .background(Color(red: 184 / 255, green: 111 / 255, blue: 101 / 255), in: Circle())
+                            .overlay(Circle().stroke(.white, lineWidth: 1.5))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 8)
+                    .accessibilityLabel("\(viewModel.item)を削除")
+                } else {
+                    Button {
+                        viewModel.handleDone(historyStore: historyStore)
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(TaskHomeStyle.sage)
+                            .frame(width: 34, height: 34)
+                            .overlay(Circle().stroke(TaskHomeStyle.sage.opacity(0.26), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 8)
+                    .accessibilityLabel("\(viewModel.item)を完了")
                 }
-                .buttonStyle(.plain)
-                .padding(.leading, 8)
-                .accessibilityLabel("\(viewModel.item)を完了")
             }
             .padding(.horizontal, 14)
             .frame(minHeight: 85)
