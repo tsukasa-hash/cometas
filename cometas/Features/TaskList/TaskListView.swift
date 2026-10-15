@@ -419,27 +419,26 @@ private struct TaskDisclosureRow: View {
     }
 
     private var editor: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 14) {
             HStack(spacing: 10) {
                 editorLabel("タスク名")
                 TextField("タスク名", text: Binding(get: { viewModel.item }, set: viewModel.setItem))
-                    .font(.system(size: 12))
-                    .padding(.horizontal, 10).frame(height: 34)
+                    .font(.system(size: 14))
+                    .padding(.horizontal, 10).frame(height: 38)
                     .background(TaskHomeStyle.paper, in: RoundedRectangle(cornerRadius: 9))
                     .overlay(RoundedRectangle(cornerRadius: 9).stroke(TaskHomeStyle.line, lineWidth: 1))
             }
-            editorDivider
+            .padding(.top, 14)
             HStack(spacing: 10) {
                 editorLabel("繰り返し")
                 Picker("繰り返し", selection: Binding(get: { viewModel.interval }, set: viewModel.setInterval)) {
                     ForEach(Interval.displayOrder) { Text("\($0.label)ごと").tag($0) }
                 }
                 .pickerStyle(.menu)
-                .font(.system(size: 12))
-                .frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
+                .font(.system(size: 14))
+                .frame(maxWidth: .infinity, minHeight: 38, alignment: .leading)
                 .background(TaskHomeStyle.paper, in: RoundedRectangle(cornerRadius: 9))
             }
-            editorDivider
             HStack(spacing: 10) {
                 editorLabel("最終実施日")
                 DatePicker("最終実施日", selection: Binding(get: { viewModel.lastDoneDate }, set: viewModel.setLastDoneDate), displayedComponents: .date)
@@ -447,7 +446,6 @@ private struct TaskDisclosureRow: View {
                     .environment(\.locale, DatePresentation.locale)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            editorDivider
             HStack(spacing: 10) {
                 editorLabel("次回予定日")
                 DatePicker("次回予定日", selection: Binding(get: { viewModel.nextDueDate }, set: viewModel.setNextDueDate), displayedComponents: .date)
@@ -455,13 +453,13 @@ private struct TaskDisclosureRow: View {
                     .environment(\.locale, DatePresentation.locale)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            HStack(spacing: 12) {
+            HStack(spacing: 15) {
                 Button("キャンセル") { viewModel.reloadFromSettings(); isEditing = false }
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(TaskHomeStyle.muted)
                     .frame(maxWidth: .infinity, minHeight: 40)
                 Button("保存") { isEditing = false }
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, minHeight: 40)
                     .background(TaskHomeStyle.sage, in: RoundedRectangle(cornerRadius: 11))
@@ -474,13 +472,9 @@ private struct TaskDisclosureRow: View {
         .padding(.bottom, 14)
     }
 
-    private var editorDivider: some View {
-        Rectangle().fill(TaskHomeStyle.line).frame(height: 0.7)
-    }
-
     private func editorLabel(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 10))
+            .font(.system(size: 12))
             .foregroundStyle(TaskHomeStyle.muted)
             .frame(width: 76, alignment: .leading)
     }
