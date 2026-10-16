@@ -435,6 +435,9 @@ private struct TaskDisclosureRow: View {
                             .foregroundStyle(TaskHomeStyle.muted.opacity(0.75))
                             .rotationEffect(.degrees(isExpanded ? 180 : 0))
                             .frame(width: 16)
+                            .opacity(isReordering ? 0 : 1)
+                            .accessibilityHidden(isReordering)
+                        
                     }
                     .contentShape(Rectangle())
                 }
