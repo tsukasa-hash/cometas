@@ -2,7 +2,7 @@ import XCTest
 @testable import cometas
 
 final class TaskListViewModelTests: XCTestCase {
-    /// 目的: 一覧上部に表示する登録数/上限数の文字列が、現在の登録数と上限5を反映することを保証する。
+    /// 目的: 一覧上部に表示する登録数/上限数の文字列が、現在の登録数と上限10を反映することを保証する。
     func testRegistrationLimitTextReflectsCurrentCountAndMaximum() async {
         await MainActor.run {
             let store = StubTaskRegistrationStore(tasks: [.primary, .secondary])
@@ -11,7 +11,7 @@ final class TaskListViewModelTests: XCTestCase {
                 widgetReloader: NoopWidgetTimelineReloader()
             )
 
-            XCTAssertEqual(viewModel.registrationLimitText, "2/5")
+            XCTAssertEqual(viewModel.registrationLimitText, "2/10")
         }
     }
 }

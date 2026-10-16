@@ -63,8 +63,8 @@ final class StorageAndAdapterTests: XCTestCase {
         )
     }
 
-    /// 目的: タスク追加が5件で停止し、各スロットが登録されることを保証する。
-    func testRegisterNextTaskStopsAtFiveTasks() {
+    /// 目的: タスク追加が10件で停止し、各スロットが登録されることを保証する。
+    func testRegisterNextTaskStopsAtTenTasks() {
         let suite = "cometas.tests.appsettings.registered.limit.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
@@ -78,6 +78,7 @@ final class StorageAndAdapterTests: XCTestCase {
         XCTAssertEqual(AppSettings.registeredTasks(defaults: defaults), ManagedTask.allCases)
         XCTAssertNil(AppSettings.registerNextTask(defaults: defaults, now: now))
         XCTAssertEqual(AppSettings.itemName(task: .quinary, defaults: defaults), "新しいタスク")
+        XCTAssertEqual(AppSettings.itemName(task: .denary, defaults: defaults), "新しいタスク")
     }
 
     /// 目的: 削除したタスクだけが登録一覧と設定から消え、空きスロットとして再利用できることを保証する。

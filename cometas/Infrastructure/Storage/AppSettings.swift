@@ -13,46 +13,27 @@ enum WidgetDisplayTaskOption: String, CaseIterable, Identifiable {
     case task3
     case task4
     case task5
+    case task6
+    case task7
+    case task8
+    case task9
+    case task10
     case shortestDue
 
     var id: String { rawValue }
 
     var label: String {
-        switch self {
-        case .task1:
-            return "タスク1"
-        case .task2:
-            return "タスク2"
-        case .task3:
-            return "タスク3"
-        case .task4:
-            return "タスク4"
-        case .task5:
-            return "タスク5"
-        case .shortestDue:
-            return "期限が近いもの"
-        }
+        self == .shortestDue ? "期限が近いもの" : "タスク\(taskNumber!)"
     }
 
     var task: ManagedTask? {
-        switch self {
-        case .task1: return .primary
-        case .task2: return .secondary
-        case .task3: return .tertiary
-        case .task4: return .quaternary
-        case .task5: return .quinary
-        case .shortestDue: return nil
-        }
+        taskNumber.flatMap(ManagedTask.init(rawValue:))
     }
 
+    private var taskNumber: Int? { Int(rawValue.dropFirst("task".count)) }
+
     init(task: ManagedTask) {
-        switch task {
-        case .primary: self = .task1
-        case .secondary: self = .task2
-        case .tertiary: self = .task3
-        case .quaternary: self = .task4
-        case .quinary: self = .task5
-        }
+        self = WidgetDisplayTaskOption(rawValue: "task\(task.rawValue)")!
     }
 }
 
@@ -83,12 +64,8 @@ enum AppSettings {
                 lastDoneTimestamp: "lastDoneTimestamp2",
                 nextDueTimestamp: "nextDueTimestamp2"
             )
-        case .tertiary:
-            return numberedKeys(3)
-        case .quaternary:
-            return numberedKeys(4)
-        case .quinary:
-            return numberedKeys(5)
+        default:
+            return numberedKeys(task.rawValue)
         }
     }
 
@@ -102,7 +79,7 @@ enum AppSettings {
     }
 
     static let defaultInterval: Interval = .twoMonths
-    static let maximumTaskCount = 5
+    static let maximumTaskCount = 10
 
     static func registeredTasks(defaults: UserDefaults = SharedStore.defaults) -> [ManagedTask] {
         if let storedValues = defaults.array(forKey: registeredTaskIDsKey) {

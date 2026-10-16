@@ -52,6 +52,8 @@ private enum TaskHomeStyle {
     static let muted = Color(red: 134 / 255, green: 137 / 255, blue: 130 / 255)
     static let sage = Color(red: 104 / 255, green: 123 / 255, blue: 107 / 255)
     static let sageSoft = Color(red: 223 / 255, green: 229 / 255, blue: 220 / 255)
+    static let sageStrong = Color(red: 72 / 255, green: 91 / 255, blue: 76 / 255)
+    static let sageOverdueSoft = Color(red: 198 / 255, green: 210 / 255, blue: 198 / 255)
     static let line = Color(red: 226 / 255, green: 224 / 255, blue: 217 / 255)
 }
 
@@ -87,6 +89,8 @@ struct TaskListView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     header
+                        .padding(.horizontal, 14)
+                        .padding(.top, 12)
                     Text(isReorderingTasks ? "長押しして移動・削除できます" : "\(dueSoonCount)件がもうすぐです")
                         .font(.system(size: 13))
                         .foregroundStyle(TaskHomeStyle.muted)
@@ -203,7 +207,7 @@ struct TaskListView: View {
                     Text("\(viewModel.tasks.count)")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(TaskHomeStyle.ink)
-                    Text("/ 5")
+                    Text("/ 10")
                         .font(.system(size: 11))
                         .foregroundStyle(TaskHomeStyle.muted)
                 }
@@ -425,10 +429,13 @@ private struct TaskDisclosureRow: View {
                         Spacer(minLength: 2)
                         Text(dueText)
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(isDueSoon ? TaskHomeStyle.sage : TaskHomeStyle.muted)
+                            .foregroundStyle(isOverdue ? TaskHomeStyle.sageStrong : (isDueSoon ? TaskHomeStyle.sage : TaskHomeStyle.muted))
                             .padding(.horizontal, 11)
                             .padding(.vertical, 5)
-                            .background(isDueSoon ? TaskHomeStyle.sageSoft : .clear, in: Capsule())
+                            .background(
+                                isOverdue ? TaskHomeStyle.sageOverdueSoft : (isDueSoon ? TaskHomeStyle.sageSoft : .clear),
+                                in: Capsule()
+                            )
                             .lineLimit(1)
                         Image(systemName: "chevron.down")
                             .font(.system(size: 10, weight: .medium))
@@ -492,6 +499,15 @@ private struct TaskDisclosureRow: View {
             to: calendar.startOfDay(for: viewModel.nextDueDate)
         ).day ?? 0
         return (0...3).contains(days)
+    }
+
+    private var isOverdue: Bool {
+        let calendar = Calendar.current
+        let days = calendar.dateComponents(
+            [.day], from: calendar.startOfDay(for: Date()),
+            to: calendar.startOfDay(for: viewModel.nextDueDate)
+        ).day ?? 0
+        return days < 0
     }
 
     private var details: some View {
