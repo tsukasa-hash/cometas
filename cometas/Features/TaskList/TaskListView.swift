@@ -69,6 +69,8 @@ struct TaskListView: View {
     @State private var isReorderingTasks = false
     @State private var taskPendingDeletion: ManagedTask?
     @State private var isShowingDeleteConfirmation = false
+    @State private var completionToast: String?
+    @State private var completionToastID = UUID()
 
     init(viewModel: TaskListViewModel = TaskListViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -181,6 +183,14 @@ struct TaskListView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             viewModel.reload()
         }
+        .overlay(alignment: .bottom) {
+            if let completionToast {
+                CompletionToast(message: completionToast)
+                    .padding(.bottom, 14)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .accessibilityIdentifier("completionToast")
+            }
+        }
     }
 
     private var header: some View {
@@ -230,6 +240,9 @@ struct TaskListView: View {
             onDelete: {
                 taskPendingDeletion = task
                 isShowingDeleteConfirmation = true
+            },
+            onComplete: { taskName in
+                showCompletionToast("\(taskName)を完了しました")
             }
         )
         .environmentObject(historyStore)
@@ -269,6 +282,45 @@ struct TaskListView: View {
             draggedTask = nil
             lastReorderTarget = nil
         }
+    }
+
+    private func showCompletionToast(_ message: String) {
+        let toastID = UUID()
+        completionToastID = toastID
+        withAnimation(.easeOut(duration: 0.2)) {
+            completionToast = message
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
+            guard completionToastID == toastID else { return }
+            withAnimation(.easeIn(duration: 0.2)) {
+                completionToast = nil
+            }
+        }
+    }
+}
+
+private struct CompletionToast: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Image(systemName: "checkmark")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(red: 44 / 255, green: 49 / 255, blue: 46 / 255))
+                .frame(width: 20, height: 20)
+                .background(Color(red: 205 / 255, green: 216 / 255, blue: 203 / 255), in: Circle())
+            Text(message)
+                .font(.system(size: 12, weight: .medium))
+                .lineLimit(1)
+        }
+        .foregroundStyle(Color(red: 248 / 255, green: 248 / 255, blue: 244 / 255))
+        .padding(.horizontal, 16)
+        .frame(minHeight: 42)
+        .background(Color(red: 44 / 255, green: 49 / 255, blue: 46 / 255).opacity(0.94), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 12, y: 5)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 
@@ -384,19 +436,22 @@ private struct TaskDisclosureRow: View {
     let isReordering: Bool
     let onToggle: () -> Void
     let onDelete: () -> Void
+    let onComplete: (String) -> Void
 
     init(
         task: ManagedTask,
         isExpanded: Bool,
         isReordering: Bool,
         onToggle: @escaping () -> Void,
-        onDelete: @escaping () -> Void
+        onDelete: @escaping () -> Void,
+        onComplete: @escaping (String) -> Void
     ) {
         _viewModel = StateObject(wrappedValue: SingleItemViewModel(task: task))
         self.isExpanded = isExpanded
         self.isReordering = isReordering
         self.onToggle = onToggle
         self.onDelete = onDelete
+        self.onComplete = onComplete
     }
 
     private var dueText: String {
@@ -462,9 +517,7 @@ private struct TaskDisclosureRow: View {
                     .padding(.leading, 8)
                     .accessibilityLabel("\(viewModel.item)を削除")
                 } else {
-                    Button {
-                        viewModel.handleDone(historyStore: historyStore)
-                    } label: {
+                    Button(action: completeTask) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(TaskHomeStyle.sage)
@@ -501,6 +554,12 @@ private struct TaskDisclosureRow: View {
         return (0...3).contains(days)
     }
 
+    private func completeTask() {
+        let taskName = viewModel.item.isEmpty ? "タスク" : viewModel.item
+        viewModel.handleDone(historyStore: historyStore)
+        onComplete(taskName)
+    }
+
     private var isOverdue: Bool {
         let calendar = Calendar.current
         let days = calendar.dateComponents(
@@ -521,7 +580,7 @@ private struct TaskDisclosureRow: View {
                         .foregroundStyle(TaskHomeStyle.ink).frame(maxWidth: .infinity, minHeight: 40)
                         .overlay(RoundedRectangle(cornerRadius: 11).stroke(TaskHomeStyle.line, lineWidth: 1))
                 }
-                Button { viewModel.handleDone(historyStore: historyStore) } label: {
+                Button(action: completeTask) {
                     Label("完了", systemImage: "checkmark").font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 40)
                         .background(TaskHomeStyle.sage, in: RoundedRectangle(cornerRadius: 11))
