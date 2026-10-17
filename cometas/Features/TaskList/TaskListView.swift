@@ -52,8 +52,7 @@ private enum TaskHomeStyle {
     static let muted = Color(red: 134 / 255, green: 137 / 255, blue: 130 / 255)
     static let sage = Color(red: 104 / 255, green: 123 / 255, blue: 107 / 255)
     static let sageSoft = Color(red: 223 / 255, green: 229 / 255, blue: 220 / 255)
-    static let sageStrong = Color(red: 72 / 255, green: 91 / 255, blue: 76 / 255)
-    static let sageOverdueSoft = Color(red: 198 / 255, green: 210 / 255, blue: 198 / 255)
+    static let sageStrong = Color(red: 102 / 255, green: 125 / 255, blue: 107 / 255)
     static let line = Color(red: 226 / 255, green: 224 / 255, blue: 217 / 255)
 }
 
@@ -223,7 +222,6 @@ struct TaskListView: View {
                 }
             }
         }
-//        .padding(.top, 2)
     }
 
     private func taskCard(_ task: ManagedTask) -> some View {
@@ -484,11 +482,13 @@ private struct TaskDisclosureRow: View {
                         Spacer(minLength: 2)
                         Text(dueText)
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(isOverdue ? TaskHomeStyle.sageStrong : (isDueSoon ? TaskHomeStyle.sage : TaskHomeStyle.muted))
+                            .foregroundStyle(isOverdue ? .white : (isDueSoon ? TaskHomeStyle.sage : TaskHomeStyle.muted))
                             .padding(.horizontal, 11)
                             .padding(.vertical, 5)
+                            .frame(minWidth: 55)
+                            .frame(height: 34)
                             .background(
-                                isOverdue ? TaskHomeStyle.sageOverdueSoft : (isDueSoon ? TaskHomeStyle.sageSoft : .clear),
+                                isOverdue ? TaskHomeStyle.sageStrong : (isDueSoon ? TaskHomeStyle.sageSoft : .clear),
                                 in: Capsule()
                             )
                             .lineLimit(1)
