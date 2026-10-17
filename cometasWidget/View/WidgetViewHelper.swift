@@ -23,6 +23,11 @@ enum DueStatus {
             return d
         }
     }
+
+    var isOverdue: Bool {
+        if case .overdue = self { return true }
+        return false
+    }
     
     var label: String {
         switch self {
@@ -59,22 +64,22 @@ enum DueStatus {
     var background: Color {
         switch self {
         case .overdue:
-            return Color(red: 1.0, green: 0.90, blue: 0.90)
+            return Color(red: 102 / 255, green: 125 / 255, blue: 107 / 255)
         case .today, .soon:
-            return Color(red: 1.0, green: 0.95, blue: 0.86)
+            return Color(red: 223 / 255, green: 229 / 255, blue: 220 / 255)
         case .normal:
-            return Color(red: 0.97, green: 0.97, blue: 0.97)
+            return Color(red: 251 / 255, green: 250 / 255, blue: 246 / 255)
         }
     }
 
-    var accent: Color {
+    var foreground: Color {
         switch self {
         case .overdue:
-            return Color(red: 0.85, green: 0.20, blue: 0.20)
+            return .white
         case .today, .soon:
-            return Color(red: 0.95, green: 0.45, blue: 0.10)
+            return Color(red: 104 / 255, green: 123 / 255, blue: 107 / 255)
         case .normal:
-            return Color(white: 0.35)
+            return Color(red: 134 / 255, green: 137 / 255, blue: 130 / 255)
         }
     }
 }

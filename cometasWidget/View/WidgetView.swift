@@ -39,7 +39,7 @@ struct WidgetView: View {
         VStack {
             Text(entry.itemName)
                 .font(.title2)
-                .foregroundColor(.black)
+                .foregroundColor(status.isOverdue ? .white : .black)
                 .fontWeight(.bold)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(height: geo.size.height * 0.6,alignment: .topLeading)
@@ -48,15 +48,15 @@ struct WidgetView: View {
                    // 残り日数
                    Text(status.label)
                        .font(.caption)
-                       .foregroundColor(.gray)
+                       .foregroundColor(status.foreground)
                        .frame(maxWidth: .infinity, alignment: .leading)
                    HStack {
                        Text("\(status.days)")
                            .frame(alignment: .leading)
-                           .foregroundColor(.black)
+                           .foregroundColor(status.foreground)
                        Text("日")
                            .font(.caption)
-                           .foregroundColor(.gray)
+                           .foregroundColor(status.foreground)
                            .frame(maxWidth: .infinity, alignment: .leading)
                    }
                }
