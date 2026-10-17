@@ -52,7 +52,7 @@ private enum TaskHomeStyle {
     static let muted = Color(red: 134 / 255, green: 137 / 255, blue: 130 / 255)
     static let sage = Color(red: 104 / 255, green: 123 / 255, blue: 107 / 255)
     static let sageSoft = Color(red: 223 / 255, green: 229 / 255, blue: 220 / 255)
-    static let sageStrong = Color(red: 102 / 255, green: 125 / 255, blue: 107 / 255)
+    static let sageStrong = Color(red: 88 / 255, green: 109 / 255, blue: 93 / 255)
     static let line = Color(red: 226 / 255, green: 224 / 255, blue: 217 / 255)
 }
 

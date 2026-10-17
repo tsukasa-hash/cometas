@@ -64,7 +64,7 @@ enum DueStatus {
     var background: Color {
         switch self {
         case .overdue:
-            return Color(red: 102 / 255, green: 125 / 255, blue: 107 / 255)
+            return Color(red:  88 / 255, green: 109 / 255, blue:  93 / 255)
         case .today, .soon:
             return Color(red: 223 / 255, green: 229 / 255, blue: 220 / 255)
         case .normal:
