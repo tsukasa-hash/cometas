@@ -68,8 +68,8 @@ struct TaskListView: View {
     @State private var isReorderingTasks = false
     @State private var taskPendingDeletion: ManagedTask?
     @State private var isShowingDeleteConfirmation = false
-    @State private var completionToast: String?
-    @State private var completionToastID = UUID()
+    @State private var taskActionToast: TaskActionToastContent?
+    @State private var taskActionToastID = UUID()
 
     init(viewModel: TaskListViewModel = TaskListViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -170,8 +170,16 @@ struct TaskListView: View {
         .alert("タスクを削除しますか？", isPresented: $isShowingDeleteConfirmation) {
             Button("削除", role: .destructive) {
                 if let taskPendingDeletion {
+                    let configuredName = AppSettings.itemName(task: taskPendingDeletion)
+                    let taskName = configuredName.isEmpty ? "タスク" : configuredName
                     viewModel.deleteTask(taskPendingDeletion)
                     if expandedTask == taskPendingDeletion { expandedTask = nil }
+                    showTaskActionToast(
+                        "\(taskName)を削除しました",
+                        iconName: "minus",
+                        iconBackgroundColor: Color(red: 184 / 255, green: 111 / 255, blue: 101 / 255),
+                        iconColor: .white
+                    )
                 }
                 taskPendingDeletion = nil
             }
@@ -184,11 +192,16 @@ struct TaskListView: View {
             viewModel.reload()
         }
         .overlay(alignment: .bottom) {
-            if let completionToast {
-                CompletionToast(message: completionToast)
+            if let taskActionToast {
+                TaskActionToast(
+                    message: taskActionToast.message,
+                    iconName: taskActionToast.iconName,
+                    iconBackgroundColor: taskActionToast.iconBackgroundColor,
+                    iconColor: taskActionToast.iconColor
+                )
                     .padding(.bottom, 14)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    .accessibilityIdentifier("completionToast")
+                    .accessibilityIdentifier("taskActionToast")
             }
         }
     }
@@ -241,7 +254,10 @@ struct TaskListView: View {
                 isShowingDeleteConfirmation = true
             },
             onComplete: { taskName in
-                showCompletionToast("\(taskName)を完了しました")
+                showTaskActionToast("\(taskName)を完了しました", iconName: "checkmark")
+            },
+            onSkip: {
+                showTaskActionToast("今回はスキップしました", iconName: "arrow.uturn.backward")
             }
         )
         .environmentObject(historyStore)
@@ -283,31 +299,51 @@ struct TaskListView: View {
         }
     }
 
-    private func showCompletionToast(_ message: String) {
+    private func showTaskActionToast(
+        _ message: String,
+        iconName: String,
+        iconBackgroundColor: Color = Color(red: 205 / 255, green: 216 / 255, blue: 203 / 255),
+        iconColor: Color = Color(red: 44 / 255, green: 49 / 255, blue: 46 / 255)
+    ) {
         let toastID = UUID()
-        completionToastID = toastID
+        taskActionToastID = toastID
         withAnimation(.easeOut(duration: 0.2)) {
-            completionToast = message
+            taskActionToast = TaskActionToastContent(
+                message: message,
+                iconName: iconName,
+                iconBackgroundColor: iconBackgroundColor,
+                iconColor: iconColor
+            )
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
-            guard completionToastID == toastID else { return }
+            guard taskActionToastID == toastID else { return }
             withAnimation(.easeIn(duration: 0.2)) {
-                completionToast = nil
+                taskActionToast = nil
             }
         }
     }
 }
 
-private struct CompletionToast: View {
+private struct TaskActionToastContent {
     let message: String
+    let iconName: String
+    let iconBackgroundColor: Color
+    let iconColor: Color
+}
+
+private struct TaskActionToast: View {
+    let message: String
+    let iconName: String
+    let iconBackgroundColor: Color
+    let iconColor: Color
 
     var body: some View {
         HStack(spacing: 9) {
-            Image(systemName: "checkmark")
+            Image(systemName: iconName)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(red: 44 / 255, green: 49 / 255, blue: 46 / 255))
+                .foregroundStyle(iconColor)
                 .frame(width: 20, height: 20)
-                .background(Color(red: 205 / 255, green: 216 / 255, blue: 203 / 255), in: Circle())
+                .background(iconBackgroundColor, in: Circle())
             Text(message)
                 .font(.system(size: 12, weight: .medium))
                 .lineLimit(1)
@@ -371,7 +407,7 @@ private struct TaskCreationView: View {
                             .overlay(RoundedRectangle(cornerRadius: 9).stroke(TaskHomeStyle.sage.opacity(0.65), lineWidth: 1))
                     }
                     VStack(alignment: .leading, spacing: 7) {
-                        Text("繰り返し間隔").font(.system(size: 12))
+                        Text("繰り返し間隔").font(.system(size: 12)).foregroundStyle(TaskHomeStyle.muted)
                         Menu {
                             ForEach(Interval.displayOrder) { value in
                                 Button("\(value.label)ごと") { interval = value }
@@ -380,8 +416,8 @@ private struct TaskCreationView: View {
                             ZStack(alignment: .leading) {
                                 Color.clear
                                 Text("\(interval.label)ごと")
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(TaskHomeStyle.sage)
+                                    .font(.system(size: 17))
+//                                    .foregroundStyle(TaskHomeStyle.sage)
                                     .padding(.horizontal, 6)
                             }
                             .frame(maxWidth: .infinity)
@@ -474,6 +510,7 @@ private struct TaskDisclosureRow: View {
     let onToggle: () -> Void
     let onDelete: () -> Void
     let onComplete: (String) -> Void
+    let onSkip: () -> Void
 
     init(
         task: ManagedTask,
@@ -481,7 +518,8 @@ private struct TaskDisclosureRow: View {
         isReordering: Bool,
         onToggle: @escaping () -> Void,
         onDelete: @escaping () -> Void,
-        onComplete: @escaping (String) -> Void
+        onComplete: @escaping (String) -> Void,
+        onSkip: @escaping () -> Void
     ) {
         _viewModel = StateObject(wrappedValue: SingleItemViewModel(task: task))
         self.isExpanded = isExpanded
@@ -489,6 +527,7 @@ private struct TaskDisclosureRow: View {
         self.onToggle = onToggle
         self.onDelete = onDelete
         self.onComplete = onComplete
+        self.onSkip = onSkip
     }
 
     private var dueText: String {
@@ -599,6 +638,11 @@ private struct TaskDisclosureRow: View {
         onComplete(taskName)
     }
 
+    private func skipTask() {
+        viewModel.handleSkip(historyStore: historyStore)
+        onSkip()
+    }
+
     private var isOverdue: Bool {
         let calendar = Calendar.current
         let days = calendar.dateComponents(
@@ -627,7 +671,7 @@ private struct TaskDisclosureRow: View {
             }
             .buttonStyle(.plain)
             .padding(.top, 22)
-            Button("今回はスキップ") { viewModel.handleSkip(historyStore: historyStore) }
+            Button("今回はスキップ", action: skipTask)
                 .font(.system(size: 13)).foregroundStyle(TaskHomeStyle.muted)
                 .padding(.top, 22)
         }
