@@ -336,6 +336,7 @@ private struct TaskCreationView: View {
     @State private var name = ""
     @State private var interval: Interval = .oneMonth
     @State private var lastDoneDate = Calendar.current.startOfDay(for: Date())
+    @State private var isDatePickerPresented = false
     let onSave: (String, Interval, Date) -> Void
 
     private var nextDueDate: Date {
@@ -347,51 +348,95 @@ private struct TaskCreationView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("新しい習慣")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: 12, weight: .bold))
                         .tracking(0.5)
                         .foregroundStyle(TaskHomeStyle.sage)
                     Text("忘れたくないことを\nひとつだけ。")
-                        .font(.system(size: 25, weight: .bold))
+                        .font(.system(size: 29, weight: .bold))
                         .tracking(-0.6)
                         .foregroundStyle(TaskHomeStyle.ink)
                     Text("必要な頃に、cometasが静かにお知らせします。")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(TaskHomeStyle.muted)
                 }
                 .padding(.top, 20)
 
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 7) {
-                        Text("タスク名").font(.system(size: 10, weight: .semibold)).foregroundStyle(TaskHomeStyle.muted)
+                        Text("タスク名").font(.system(size: 12)).foregroundStyle(TaskHomeStyle.muted)
                         TextField("例：加湿器の手入れ", text: $name)
                             .font(.system(size: 13))
-                            .padding(.horizontal, 11).frame(height: 40)
+                            .padding(.horizontal, 11).frame(height: 48)
                             .background(TaskHomeStyle.paper, in: RoundedRectangle(cornerRadius: 9))
                             .overlay(RoundedRectangle(cornerRadius: 9).stroke(TaskHomeStyle.sage.opacity(0.65), lineWidth: 1))
                     }
                     VStack(alignment: .leading, spacing: 7) {
-                        Text("繰り返し間隔").font(.system(size: 10, weight: .semibold)).foregroundStyle(TaskHomeStyle.muted)
-                        Picker("繰り返し間隔", selection: $interval) {
-                            ForEach(Interval.displayOrder) { value in Text("\(value.label)ごと").tag(value) }
+                        Text("繰り返し間隔").font(.system(size: 12))
+                        Menu {
+                            ForEach(Interval.displayOrder) { value in
+                                Button("\(value.label)ごと") { interval = value }
+                            }
+                        } label: {
+                            ZStack(alignment: .leading) {
+                                Color.clear
+                                Text("\(interval.label)ごと")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(TaskHomeStyle.sage)
+                                    .padding(.horizontal, 6)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
                         }
-                        .pickerStyle(.menu)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 6).frame(height: 40)
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
                         .background(TaskHomeStyle.paper, in: RoundedRectangle(cornerRadius: 9))
                     }
-                    DatePicker("最終実施日", selection: $lastDoneDate, displayedComponents: .date)
-                        .font(.system(size: 10, weight: .semibold))
-                        .environment(\.locale, DatePresentation.locale)
-                        .padding(.horizontal, 10).frame(height: 40)
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text("最終実施日").font(.system(size: 12)).foregroundStyle(TaskHomeStyle.muted)
+                        Button {
+                            isDatePickerPresented = true
+                        } label: {
+                            ZStack(alignment: .leading) {
+                                Color.clear
+                                Text(lastDoneDate.formatted(DatePresentation.ymdFormat))
+                                    .font(.system(size: 17))
+                                    .foregroundStyle(TaskHomeStyle.ink)
+                                    .padding(.horizontal, 10)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
                         .background(TaskHomeStyle.paper, in: RoundedRectangle(cornerRadius: 9))
-                    HStack {
-                        Text("次回予定日").foregroundStyle(TaskHomeStyle.muted)
-                        Spacer()
+                        .sheet(isPresented: $isDatePickerPresented) {
+                            NavigationStack {
+                                DatePicker("最終実施日", selection: $lastDoneDate, displayedComponents: .date)
+                                    .datePickerStyle(.graphical)
+                                    .environment(\.locale, DatePresentation.locale)
+                                    .padding()
+                                    .navigationTitle("最終実施日")
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .confirmationAction) {
+                                            Button("完了") { isDatePickerPresented = false }
+                                        }
+                                    }
+                            }
+                            .presentationDetents([.medium, .large])
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text("次回予定日").font(.system(size: 12)).foregroundStyle(TaskHomeStyle.muted)
                         Text(nextDueDate.formatted(DatePresentation.ymdFormat)).foregroundStyle(TaskHomeStyle.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 6).frame(height: 48)
+                        .background(TaskHomeStyle.paper, in: RoundedRectangle(cornerRadius: 9))
                     }
-                    .font(.system(size: 11, weight: .medium))
-                    .padding(.horizontal, 10).frame(height: 40)
-                    .background(TaskHomeStyle.paper, in: RoundedRectangle(cornerRadius: 9))
                     Button {
                         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !trimmedName.isEmpty else { return }
@@ -399,9 +444,9 @@ private struct TaskCreationView: View {
                         dismiss()
                     } label: {
                         Text("タスクを追加")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, minHeight: 42)
+                            .frame(maxWidth: .infinity, minHeight: 48)
                             .background(TaskHomeStyle.sage, in: RoundedRectangle(cornerRadius: 11))
                     }
                     .buttonStyle(.plain)
@@ -416,14 +461,7 @@ private struct TaskCreationView: View {
             .padding(.horizontal, 20)
         }
         .background(TaskHomeStyle.paper.ignoresSafeArea())
-        .navigationTitle("新しいタスク")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: { Image(systemName: "chevron.left") }
-                    .accessibilityLabel("戻る")
-            }
-        }
     }
 }
 
