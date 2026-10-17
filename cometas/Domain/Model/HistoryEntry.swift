@@ -13,22 +13,16 @@ enum ManagedTask: Int, Codable, CaseIterable, Identifiable {
     case tertiary = 3
     case quaternary = 4
     case quinary = 5
+    case senary = 6
+    case septenary = 7
+    case octonary = 8
+    case nonary = 9
+    case denary = 10
 
     var id: Int { rawValue }
 
     var label: String {
-        switch self {
-        case .primary:
-            return "タスク1"
-        case .secondary:
-            return "タスク2"
-        case .tertiary:
-            return "タスク3"
-        case .quaternary:
-            return "タスク4"
-        case .quinary:
-            return "タスク5"
-        }
+        return "タスク\(rawValue)"
     }
 }
 

@@ -46,7 +46,6 @@ struct HistoryView: View {
     @State private var selectedTask: ManagedTask?
     @State private var editingEntry: HistoryEntry?
     @State private var editedDate: Date = Date()
-    @State private var pressingEntryID: UUID?
 
     private let paper = Color(red: 245 / 255, green: 243 / 255, blue: 237 / 255)
     private let card = Color(red: 251 / 255, green: 250 / 255, blue: 246 / 255)
@@ -79,44 +78,45 @@ struct HistoryView: View {
                             .listRowSeparator(.hidden)
                     } else {
                         ForEach(Array(filteredHistories.enumerated()), id: \.element.id) { index, entry in
-                            HStack(spacing: 13) {
-                                if entry.type == .done {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 15, weight: .medium))
-                                        .foregroundStyle(sage)
-                                        .frame(width: 30, height: 30)
-                                        .background(sageSoft, in: Circle())
-                                } else {
-                                    Image(systemName: "arrow.uturn.backward")
-                                        .font(.system(size: 15, weight: .medium))
-                                        .foregroundStyle(sage)
-                                        .frame(width: 30, height: 30)
-                                        .background(sageSoft, in: Circle())
+                            Button {
+                                editedDate = entry.date
+                                withAnimation(.easeOut(duration: 0.25)) {
+                                    editingEntry = entry
                                 }
+                            } label: {
+                                HStack(spacing: 13) {
+                                    Image(systemName: entry.type == .done ? "checkmark" : "arrow.uturn.backward")
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(sage)
+                                        .frame(width: 32, height: 32)
+                                        .background(sageSoft, in: Circle())
 
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(entry.itemName)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundStyle(ink)
-                                    Text(DatePresentation.yearMonthDayWithoutPadding(entry.date))
-                                        .font(.system(size: 11))
-                                        .foregroundStyle(muted)
+                                    VStack(alignment: .leading, spacing: 5) {
+                                        Text(entry.itemName)
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundStyle(ink)
+                                        Text(DatePresentation.yearMonthDayWithoutPadding(entry.date))
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(muted)
+                                    }
+                                    Spacer(minLength: 0)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 11, weight: .regular))
+                                        .foregroundStyle(muted.opacity(0.7))
                                 }
-                                Spacer(minLength: 0)
-                            }
-                            .frame(minHeight: 72)
-                            .padding(.horizontal, 16)
-                            .background(pressingEntryID == entry.id ? sageSoft.opacity(0.55) : card)
-                            .overlay(alignment: .bottom) {
-                                if index < filteredHistories.count - 1 {
-                                    Rectangle().fill(line).frame(height: 1).padding(.leading, 59)
+                                .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .background(card)
+                                .overlay(alignment: .bottom) {
+                                    if index < filteredHistories.count - 1 {
+                                        Rectangle().fill(line).frame(height: 1).padding(.leading, 59)
+                                    }
                                 }
                             }
+                            .buttonStyle(.plain)
                             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                            .listRowBackground(paper)
-                            .listRowSeparator(.hidden)
                             .listRowBackground(card)
-                            .contentShape(Rectangle())
+                            .listRowSeparator(.hidden)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
                                     historyStore.delete(ids: [entry.id])
@@ -131,12 +131,6 @@ struct HistoryView: View {
                                     Label("編集", systemImage: "pencil.line")
                                 }
                                 .tint(.orange)
-                            }
-                            .onLongPressGesture(minimumDuration: 0.5, pressing: { isPressing in
-                                pressingEntryID = isPressing ? entry.id : nil
-                            }) {
-                                editingEntry = entry
-                                editedDate = entry.date
                             }
                         }
                     }
@@ -168,44 +162,10 @@ struct HistoryView: View {
         }
         .tint(sage)
         .sheet(item: $editingEntry) { entry in
-            NavigationStack {
-                VStack(spacing: 16) {
-                    HStack(spacing: 12) {
-                        quickDateButton(title: "2日前", date: twoDaysAgoDate)
-                        quickDateButton(title: "昨日", date: yesterdayDate)
-                    }
-                    DatePicker(
-                        "やった日付",
-                        selection: $editedDate,
-                        displayedComponents: .date
-                    )
-                    .datePickerStyle(.wheel)
-                    .environment(\.locale, Locale(identifier: "ja_JP"))
-                    .labelsHidden()
-                }
-                .navigationTitle("履歴を編集")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("キャンセル") {
-                            editingEntry = nil
-                        }
-                        .buttonStyle(.plain)
-                        .frame(width: 100, alignment: .center)
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("保存") {
-                            historyStore.updateDate(id: entry.id, newDate: editedDate)
-                            editingEntry = nil
-                        }
-                        .buttonStyle(DefaultButtonStyle())
-                        .frame(width: 100, alignment: .center)
-                        .foregroundStyle(Color.blue)
-                    }
-                }
-            }
-            .presentationDetents([.fraction(0.45)])
+            editSheet(for: entry)
+            .presentationDetents([.height(500)])
             .presentationDragIndicator(.visible)
+            .presentationBackground(paper)
         }
     }
 
@@ -222,45 +182,107 @@ struct HistoryView: View {
     }
 
 
+    private func editSheet(for entry: HistoryEntry) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button("キャンセル") {
+                    editingEntry = nil
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(muted)
+
+                Spacer()
+                Text("履歴を編集")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(ink)
+                Spacer()
+
+                Button {
+                    historyStore.updateDate(id: entry.id, newDate: editedDate)
+                    editingEntry = nil
+                } label: {
+                    Text("保存")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(sage)
+                        .padding(.horizontal, 15)
+                        .padding(.vertical, 8)
+                        .background(sageSoft, in: Capsule())
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 16)
+            .padding(.top, 30)
+
+            Rectangle()
+                .fill(line)
+                .frame(height: 1)
+                .padding(.horizontal, 18)
+
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(spacing: 12) {
+                    Image(systemName: entry.type == .done ? "checkmark" : "arrow.uturn.backward")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(sage)
+                        .frame(width: 28, height: 28)
+                        .background(sageSoft, in: Circle())
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(entry.type == .done ? "完了したタスク" : "スキップしたタスク")
+                            .font(.system(size: 10))
+                            .foregroundStyle(muted)
+                        Text(entry.itemName)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(ink)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 68)
+                .background(card, in: RoundedRectangle(cornerRadius: 15))
+                .overlay(RoundedRectangle(cornerRadius: 15).stroke(line.opacity(0.7), lineWidth: 1))
+
+                HStack(spacing: 8) {
+                    quickDateButton(title: "2日前", date: twoDaysAgoDate)
+                    quickDateButton(title: "昨日", date: yesterdayDate)
+                    quickDateButton(title: "今日", date: todayDate)
+                }
+
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("実施日")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(muted)
+                    DatePicker("実施日", selection: $editedDate, displayedComponents: .date)
+                        .datePickerStyle(.wheel)
+                        .environment(\.locale, Locale(identifier: "ja_JP"))
+                        .labelsHidden()
+                        .tint(ink)
+                        .frame(maxWidth: .infinity)
+                }
+
+                Text("選択した日付で履歴を更新します。")
+                    .font(.system(size: 13))
+                    .foregroundStyle(muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 16)
+            Spacer(minLength: 0)
+        }
+        .background(paper)
+    }
+
     private func quickDateButton(title: String, date: Date) -> some View {
         let isSelected = calendar.isDate(editedDate, inSameDayAs: date)
-        return Group {
-            if isSelected {
-                Button {
-                    editedDate = date
-                }
-                label: {
-                        Text(title)
-                        .font(.headline)
-                        .listRowBackground(Color.clear)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: 150, minHeight: 30)
-                        .background(.black)
-                        .cornerRadius(30)
-                }
-//                .buttonStyle(.borderedProminent)
-            } else {
-                Button {
-                    editedDate = date
-                }
-                label: {
-                        Text(title)
-                            .font(.headline)
-                            .listRowBackground(Color.clear)
-                            .foregroundColor(.gray)
-                            .frame(maxWidth: 150, minHeight: 30)
-                            .background(.white)
-                            .cornerRadius(30)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 30)
-                                    .stroke(Color.gray, lineWidth: 1)
-                                    .frame(maxWidth: 150, minHeight: 30)
-                            )
-                }
-//                .buttonStyle(.bordered)
-            }
+        return Button {
+            editedDate = date
+        } label: {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(isSelected ? sage : muted)
+                .frame(maxWidth: .infinity, minHeight: 34)
+                .background(isSelected ? sageSoft : paper, in: Capsule())
+                .overlay(Capsule().stroke(isSelected ? sage.opacity(0.25) : line, lineWidth: 1))
         }
-        .tint(.black)
+        .buttonStyle(.plain)
     }
 
     private var filterMenu: some View {
