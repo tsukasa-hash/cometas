@@ -10,6 +10,8 @@ import SwiftUI
 struct SettingView: View {
     @State private var widgetDisplayTaskOption: WidgetDisplayTaskOption = AppSettings.widgetDisplayTaskOption()
     private let widgetReloader: WidgetTimelineReloading = WidgetCenterTimelineReloader()
+    private let paper = Color(red: 243 / 255, green: 241 / 255, blue: 234 / 255)
+    private let card = Color(red: 251 / 255, green: 250 / 255, blue: 246 / 255)
 
     private var availableOptions: [WidgetDisplayTaskOption] {
         let taskOptions = AppSettings.registeredTasks().map { WidgetDisplayTaskOption(task: $0) }
@@ -27,8 +29,14 @@ struct SettingView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(.gray)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(card, in: RoundedRectangle(cornerRadius: 9))
+                    .listRowBackground(card)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(paper.ignoresSafeArea())
             .navigationTitle("設定")
             .navigationBarTitleDisplayMode(.inline)
         }

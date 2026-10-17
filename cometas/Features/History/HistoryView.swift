@@ -47,7 +47,7 @@ struct HistoryView: View {
     @State private var editingEntry: HistoryEntry?
     @State private var editedDate: Date = Date()
 
-    private let paper = Color(red: 245 / 255, green: 243 / 255, blue: 237 / 255)
+    private let paper = Color(red: 243 / 255, green: 241 / 255, blue: 234 / 255)
     private let card = Color(red: 251 / 255, green: 250 / 255, blue: 246 / 255)
     private let ink = Color(red: 41 / 255, green: 45 / 255, blue: 43 / 255)
     private let muted = Color(red: 134 / 255, green: 137 / 255, blue: 130 / 255)

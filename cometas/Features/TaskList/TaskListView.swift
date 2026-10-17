@@ -46,7 +46,7 @@ final class TaskListViewModel: ObservableObject {
 }
 
 private enum TaskHomeStyle {
-    static let paper = Color(red: 245 / 255, green: 243 / 255, blue: 237 / 255)
+    static let paper = Color(red: 243 / 255, green: 241 / 255, blue: 234 / 255)
     static let card = Color(red: 251 / 255, green: 250 / 255, blue: 246 / 255)
     static let ink = Color(red: 41 / 255, green: 45 / 255, blue: 43 / 255)
     static let muted = Color(red: 134 / 255, green: 137 / 255, blue: 130 / 255)
@@ -97,6 +97,7 @@ struct TaskListView: View {
                         .foregroundStyle(TaskHomeStyle.muted)
                         .padding(.top, 21)
                         .padding(.bottom, 14)
+                        .padding(.horizontal, 14)
 
                     LazyVStack(spacing: 10) {
                         ForEach(viewModel.tasks) { task in
